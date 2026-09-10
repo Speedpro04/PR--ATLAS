@@ -89,6 +89,35 @@ que sobe. Ela não bloqueia E1 nem E2; só aparece na E3, quando a foto entra.
 
 ---
 
+## Duas armadilhas de ferramenta, não de código
+
+Custaram uma rodada inteira de "nada mudou" e "isso não é mobile" em
+10/09/2026. Nenhuma das duas é defeito do app.
+
+**1. O service worker em desenvolvimento servia a versão antiga.** Com
+`devOptions.enabled: true` no `vite.config.ts`, o vite-plugin-pwa registra um
+service worker em desenvolvimento que guarda o shell em cache. Resultado: a
+alteração entra no código, o build passa, a medição do arquivo confirma — e a
+tela continua mostrando a versão de antes. Ficou **desligado de propósito**.
+
+O teste de offline que vale é o do build de produção (`npm run build` +
+`vite preview`), nunca o de desenvolvimento. Ligue `devOptions` de volta só
+para mexer no próprio service worker — e lembre que desligar não remove o que
+já está instalado no navegador: é preciso desregistrar e limpar os caches.
+
+**2. Emular o celular do lado do assistente não encolhe a janela do Marcos.**
+O `resize_window` do navegador embutido muda o viewport que o assistente mede
+e captura; a janela dele continua em ~950px. Ele via desktop enquanto o
+assistente via 375px, e os dois insistindo que estavam certos.
+
+A saída foi `public/telas.html`: uma página de conferência que embute o app em
+um iframe do tamanho real do aparelho — celular em pé, tablet em pé, tablet
+deitado — e encolhe só quando não cabe, dizendo em quantos por cento está
+exibindo. Ferramenta de conferência, **não faz parte do app**: mora em
+`public/` e não entra em rota nenhuma.
+
+---
+
 ## Quem é o usuário de verdade
 
 Não é "o funcionário". É o **colaborador de chão**: o cara com graxa na mão, sol

@@ -27,7 +27,7 @@ export default function Login({ aoEntrar }: { aoEntrar: (s: Sessao) => void }) {
           <img
             src="/logo-transparent.png"
             alt=""
-            className="w-[160px] h-[160px] mx-auto mb-8 object-contain"
+            className="w-[200px] h-[200px] mx-auto mb-8 object-contain"
           />
           <h1 className="text-3xl md:text-4xl font-serif font-bold text-white">
             Atlas Campo

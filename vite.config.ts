@@ -39,6 +39,9 @@ export default defineConfig({
         inlineWorkboxRuntime: true,
         // Shell: HTML, JS, CSS, fontes e imagens do proprio app.
         globPatterns: ['**/*.{js,css,html,png,svg,woff,woff2}'],
+        // telas.html e ferramenta de conferencia do desenvolvimento. Nao e
+        // app, nao tem rota, e nao ocupa espaco no celular do colaborador.
+        globIgnores: ['telas.html'],
         navigateFallback: '/index.html',
         runtimeCaching: [
           {
@@ -54,7 +57,15 @@ export default defineConfig({
           },
         ],
       },
-      devOptions: { enabled: true, type: 'module' },
+      // DESLIGADO no dia a dia, de proposito. Com o service worker ligado em
+      // desenvolvimento, o shell vem do cache e a tela continua mostrando a
+      // versao antiga depois de cada alteracao — custou uma rodada inteira de
+      // "nada mudou" em 10/09/2026.
+      //
+      // O teste de offline que vale e o do build de producao (npm run build +
+      // vite preview), nao o de desenvolvimento. Ligue de volta so quando for
+      // mexer no proprio serviceworker.
+      devOptions: { enabled: false, type: 'module' },
     }),
   ],
   server: { host: true, port: 6002 },

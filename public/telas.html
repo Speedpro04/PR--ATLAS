@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Atlas Campo — celular e tablet</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /*
+        Ferramenta de conferencia, nao faz parte do app.
+        Um aparelho por vez, no tamanho real, encolhido apenas o suficiente
+        para caber na janela — sem depender de emulacao do navegador.
+      */
+      :root {
+        --navy-deep: #010c20;
+        --gold: #c5a059;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #000509;
+        color: #fff;
+        font-family: 'Inter', system-ui, sans-serif;
+        overflow-x: hidden;
+      }
+      h1 {
+        font-family: ui-serif, Georgia, 'Times New Roman', serif;
+        font-weight: 700;
+        font-size: 26px;
+        margin: 0 0 6px;
+      }
+      .sub {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.4em;
+        font-weight: 900;
+        color: rgba(255, 255, 255, 0.4);
+        margin: 0 0 24px;
+      }
+      .grupo {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .rotulo {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.3em;
+        font-weight: 900;
+        color: rgba(255, 255, 255, 0.25);
+        width: 84px;
+        flex-shrink: 0;
+      }
+      button {
+        font-family: inherit;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.25em;
+        color: rgba(255, 255, 255, 0.5);
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        padding: 12px 18px;
+        min-height: 44px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      button:hover {
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.25);
+      }
+      button.ativo {
+        background: var(--gold);
+        border-color: var(--gold);
+        color: var(--navy-deep);
+      }
+      #palco {
+        margin-top: 24px;
+      }
+      #moldura {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 2px;
+        background: var(--navy-deep);
+        overflow: hidden;
+        transform-origin: top left;
+      }
+      iframe {
+        border: 0;
+        display: block;
+        background: var(--navy-deep);
+      }
+      #medida {
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        color: rgba(255, 255, 255, 0.25);
+        margin-top: 12px;
+        font-weight: 900;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Atlas Campo</h1>
+    <p class="sub">Tamanho real de cada aparelho</p>
+
+    <div class="grupo">
+      <span class="rotulo">Aparelho</span>
+      <button data-l="375" data-a="812" class="ativo">Celular em pé</button>
+      <button data-l="768" data-a="1024">Tablet em pé</button>
+      <button data-l="1024" data-a="768">Tablet deitado</button>
+    </div>
+
+    <div class="grupo">
+      <span class="rotulo">Tela</span>
+      <button data-tela="/entrar" data-sessao="nao" class="ativo">Login</button>
+      <button data-tela="/" data-sessao="sim">Escolher barco</button>
+      <button data-tela="/barco/YA-IATE-2022-A7F3" data-sessao="sim">Fichário</button>
+    </div>
+
+    <div id="palco">
+      <div id="moldura"><iframe id="quadro" title="Atlas Campo"></iframe></div>
+      <p id="medida"></p>
+    </div>
+
+    <script>
+      const CHAVE = 'atlas-campo:sessao'
+      const quadro = document.getElementById('quadro')
+      const moldura = document.getElementById('moldura')
+      const medida = document.getElementById('medida')
+
+      let largura = 375
+      let altura = 812
+      let rota = '/entrar'
+      let precisaSessao = false
+
+      // Mesma origem do app, entao o localStorage e o mesmo que o iframe le.
+      function garantirSessao(precisa) {
+        try {
+          if (precisa) {
+            localStorage.setItem(
+              CHAVE,
+              JSON.stringify({
+                matricula: '4471',
+                nome: 'Colaborador',
+                entrouEm: new Date().toISOString(),
+              }),
+            )
+          } else {
+            localStorage.removeItem(CHAVE)
+          }
+        } catch (e) {
+          /* modo privativo */
+        }
+      }
+
+      function desenhar() {
+        garantirSessao(precisaSessao)
+
+        // Encolhe so o necessario para caber na janela. Nunca aumenta:
+        // o aparelho pequeno continua pequeno, que e a graca.
+        const disponivel = document.body.clientWidth - 48
+        const escala = Math.min(1, disponivel / largura)
+
+        quadro.style.width = largura + 'px'
+        quadro.style.height = altura + 'px'
+        moldura.style.transform = 'scale(' + escala + ')'
+
+        // O scale nao muda o espaco ocupado no fluxo; o palco acompanha.
+        document.getElementById('palco').style.height = altura * escala + 60 + 'px'
+
+        medida.textContent =
+          largura +
+          ' × ' +
+          altura +
+          (escala < 1 ? '  ·  exibido a ' + Math.round(escala * 100) + '%' : '')
+
+        // about:blank primeiro: forca o app a reler a sessao do zero.
+        quadro.src = 'about:blank'
+        setTimeout(() => {
+          quadro.src = rota
+        }, 60)
+      }
+
+      function ligar(seletor, aoClicar) {
+        const grupo = document.querySelectorAll(seletor)
+        grupo.forEach((b) => {
+          b.addEventListener('click', () => {
+            grupo.forEach((o) => o.classList.remove('ativo'))
+            b.classList.add('ativo')
+            aoClicar(b)
+            desenhar()
+          })
+        })
+      }
+
+      ligar('button[data-l]', (b) => {
+        largura = Number(b.dataset.l)
+        altura = Number(b.dataset.a)
+      })
+
+      ligar('button[data-tela]', (b) => {
+        rota = b.dataset.tela
+        precisaSessao = b.dataset.sessao === 'sim'
+      })
+
+      addEventListener('resize', desenhar)
+      desenhar()
+    </script>
+  </body>
+</html>
