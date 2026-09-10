@@ -2,8 +2,9 @@
 
 **Produto:** Yachts Atlas
 **Módulo:** PWA de captação em campo (doca, pátio, oficina)
-**Público:** funcionário operacional da Marina
-**Status:** especificação — nada implementado
+**Nome do app:** Atlas Campo
+**Público:** colaborador de chão da Marina — píer, área seca, galpão
+**Status:** especificação — 3 das 4 decisões fechadas; nada implementado
 **Repositório:** módulo separado, não mistura com `YACTHS-ATLAS-OFICIAL`
 
 ---
@@ -16,10 +17,24 @@ e o que não é registrado não existe no dossiê.
 
 ## 2. O que este módulo é
 
+> **O Atlas Campo é a ponte do chão da Marina para o escritório. Só isso.**
+
+Ponte não sela, não analisa, não vira relatório. Ponte leva. Se uma ideia não
+ajuda a travessia do píer até a mesa de quem revisa, ela está fora — e essa
+frase é o critério de corte deste documento inteiro.
+
 Um PWA instalável no celular que deixa o funcionário **registrar serviço no
 momento em que o serviço acontece**, offline, e sincronizar depois. O que ele
 captura entra como **rascunho**, nunca como registro selado. O escritório revisa
 e sela.
+
+**Ele é a matéria-prima do escritório, não o sistema.** O app captura só o que
+existe no barco e some se ninguém registrar na hora: fotos, horímetro, qual
+barco, quando, quem estava lá. O que mora na gaveta — valor, nota fiscal, número
+da OS, código da peça — é preenchido na revisão. O rascunho chega **incompleto
+de propósito**.
+
+O escritório deixa de **caçar informação** e passa a **conferir e completar**.
 
 ### O que este módulo NÃO é
 
@@ -34,28 +49,48 @@ muda o fluxo, o modelo de dados e a checagem de duplicidade.
 
 ## 3. Decisões que travam a implementação
 
-São do Marcos. Enquanto não fecharem, o resto é desenho no papel.
+São do Marcos. **Três fechadas em 10/09/2026; a 3.3 segue aberta.**
 
-### 3.1 Sessão offline
+### 3.1 Sessão offline · DECIDIDA 10/09/2026
 
-Hoje `get_current_user` (backend/app/core/security.py) chama
-`auth.get_user(token)` **no Supabase a cada requisição** — é rede. Sem sinal, o
-backend não consegue dizer quem é o usuário.
+**Sessão longa: 7 dias.** O app não pede login de novo enquanto durar.
 
-- Validar o JWT localmente (assinatura) ou confiar no token guardado até expirar?
-- Quanto tempo a sessão dura offline — um dia, uma semana?
+O que destravou a decisão: **offline o app não fala com o backend**. A fila mora
+no IndexedDB, e a autenticação só importa na hora de sincronizar — que é online
+por definição. Não é preciso validar JWT sem rede, e `security.py` não muda.
 
-### 3.2 Inadimplência durante o offline
+**O offline aqui é a borda do wi-fi, não o alto-mar.** A Marina tem wi-fi; ele
+não alcança o fim do píer. O colaborador sai do sinal, trabalha quarenta
+minutos, volta para a área coberta e o aparelho sincroniza sozinho, no bolso.
+Minutos, não dias. Os 7 dias são folga, não a rotina.
 
-O mesmo `get_current_user` roda `_barrar_se_devendo`, que devolve **402** para
-marina em atraso. Se a Marina ficar inadimplente enquanto o funcionário está três
-dias offline:
+**O primeiro login sempre tem rede** — acontece no pátio, no dia em que o
+aparelho é preparado. Depois disso o celular já sabe quem é a pessoa.
 
-- Os registros da fila entram assim mesmo, ou ficam retidos?
-- (Recomendação: entram. O trabalho foi feito; cobrança é outra conversa, e
-  perder registro por causa de boleto destrói a confiança no app.)
+Na sincronização faz refresh normal do token. Se o refresh falhar, pede acesso
+de novo — **e a fila continua guardada**. Nenhum registro se perde por sessão
+vencida.
 
-### 3.3 Qual byte é a prova
+**Sinal fraco é pior que sinal nenhum.** Na borda do alcance o celular fica
+agarrado a um wi-fi de uma barra e não troca para o 4G: a requisição não volta
+nem dá erro, e o app trava com a bolinha girando. É o momento em que o
+colaborador desiste. Regra: **nunca esperar pela rede** — poucos segundos sem
+resposta e o registro vai para a fila, sem alarde. Ver E4.
+
+**O que o offline custa, e é assumido:** desligar alguém no painel não alcança
+um aparelho sem rede. O corte só vale quando ele tenta sincronizar. Com wi-fi na
+marina essa janela é de horas, não de dias.
+
+### 3.2 Inadimplência durante o offline · DECIDIDA 10/09/2026
+
+**Os registros entram assim mesmo.** A rota de sincronização fica isenta do 402
+de `_barrar_se_devendo` (`backend/app/core/security.py`).
+
+O trabalho foi feito; cobrança é outra conversa. Perder registro por causa de
+boleto destrói a confiança no app — e o colaborador veria "erro ao enviar" sem
+ter como entender o motivo, porque a dívida não é da conta dele.
+
+### 3.3 Qual byte é a prova · ABERTA
 
 O PWA precisa comprimir foto no celular (dados e espaço). Mas o produto usa
 **SHA-256 como prova de integridade**.
@@ -65,19 +100,51 @@ O PWA precisa comprimir foto no celular (dados e espaço). Mas o produto usa
 Precisa estar escrito. Se ficar implícito, alguém ajusta a compressão um dia e
 quebra a cadeia de custódia sem ninguém perceber.
 
-### 3.4 Quem é o funcionário
+**Não bloqueia E1 nem E2.** Só aparece na E3, quando a foto entra.
 
-A entidade **não existe** hoje. O sistema conhece Marina (usuário), armador
-(reconhecido por e-mail no barco) e admin da plataforma.
+### 3.4 Quem é o funcionário · DECIDIDA 10/09/2026
 
-Todo registro selado carrega `created_by`. O dossiê vale para seguradora porque
-diz **quem** registrou. Identificação por PIN ou lista suspensa faz qualquer um
-assinar como qualquer um — e esvazia o registro justamente onde ele deveria
-provar mais.
+**O colaborador tem login de verdade — e digita a senha uma vez, não todo dia.**
 
-- Funcionário é usuário Supabase de verdade (com login), vinculado à Marina?
-- Ou é um rótulo dentro da sessão da Marina, e o `created_by` continua sendo a
-  Marina?
+- A Marina o cadastra no painel: **nome, matrícula e telefone**. Não e-mail
+  corporativo, que o pessoal do chão não tem.
+- **Ele entra por matrícula e senha.** Todo mundo sabe a própria matrícula;
+  ninguém ali sabe um e-mail de trabalho. Por baixo o Supabase continua
+  exigindo um endereço, montado pelo app a partir da matrícula — o colaborador
+  nunca o vê. Na tela dele são dois campos e o logo.
+- **Código da Marina, uma vez só.** Matrícula 001 existe em duas Marinas. Na
+  primeira abertura do app, ainda no pátio e com wi-fi, ele informa o código da
+  Marina; depois disso a tela fica só com matrícula e senha, para sempre.
+- Ele entra uma vez, com rede, e o app fica aberto (3.1).
+- O `created_by` do que ele captura é **dele**, não da Marina.
+- Saiu da empresa: a Marina desliga no painel.
+
+A decisão foi e voltou na conversa de 10/09/2026, e o motivo do retorno vale
+mais do que ela. O argumento para tirar o login era que **a assinatura que vale
+é a de quem sela** — como nada entra selado, o valor probatório do dossiê vem da
+revisão, não do login de quem capturou. Isso continua verdade, mas resolve só o
+lado jurídico.
+
+O que ele não resolve é a **segunda-feira de manhã**: sem login, o aparelho vira
+chave mestra, qualquer um registra como qualquer um, e quando chega ao
+escritório um horímetro impossível não há com quem conversar — há só um nome que
+alguém tocou numa lista. **Responsabilidade não é só para a seguradora.**
+
+Por isso o PIN da v1 continua condenado, e a lista de nomes cai junto: os dois
+identificam por honra.
+
+**O atrito real não é existir senha — é digitar senha com a mão suja, em pé,
+toda vez.** Login uma vez e sessão longa é o que o WhatsApp faz: tem login, e
+ninguém lembra de ter feito.
+
+**Falta decidir, quando aparecer:** o aparelho é da pessoa ou da Marina. Se for
+compartilhado, sessão longa não serve sozinha — o dia inteiro sairia no nome de
+quem entrou de manhã, e é preciso troca rápida de pessoa. Offline, só troca para
+quem **já entrou naquele aparelho** alguma vez com rede.
+
+E o revisor **não é cargo novo**: é quem já entra no Atlas hoje — dono,
+administrativo, quem toma conta. Marina pequena não tem encarregado, e o app não
+pode exigir que ela arrume um.
 
 ---
 
@@ -139,16 +206,42 @@ banco, com regras de autorização diferentes das que já existem.
 
 ---
 
-## 6. Fluxo do funcionário
+## 6. Fluxo do colaborador
 
-1. Abre o app (instalado na tela de início).
-2. **Escolhe o barco** de uma lista já baixada (não digita, não cadastra).
-3. **Escolhe o que fez** — troca de óleo, docagem, inspeção. É a categoria.
-4. **Fotografa primeiro.** A peça sai do barco e some; a foto é a única prova
+Três telas, nessa ordem. Decidido em 10/09/2026.
+
+**Tela 1 — Login.** Logo do Atlas Campo, matrícula, senha. Só isso. Acontece uma
+vez; depois a sessão dura 7 dias (3.1) e ele não vê mais esta tela.
+
+**Tela 2 — Escolher o barco.** É o único momento em que ele precisa *procurar*
+alguma coisa, e por isso tem uma tela inteira só para ela: lista grande, busca
+por nome, funciona offline. Ele não digita e não cadastra — o barco vem do
+painel.
+
+**Tela 3 — O fichário.** Abre já sabendo de quem está falando.
+
+O cabeçalho **vem preenchido, e ele não digita nada disso**:
+
+| Campo | De onde vem |
+|---|---|
+| quem fez | quem entrou no app |
+| matrícula | do cadastro |
+| dia e hora | relógio do aparelho, ao abrir a ficha |
+| barco | a escolha da tela 2 |
+
+Ele só **confere**. Se estiver errado, é porque entrou como outra pessoa — e aí
+é bom mesmo que apareça grande. Isso é exatamente o que o escritório precisa
+saber, ninguém consegue reconstituir depois, e sai de graça: o app já sabe.
+
+Digitado por ele fica só o que o app não tem como saber:
+
+1. **O que fez** — troca de óleo, docagem, inspeção. É a categoria, escolhida
+   numa lista, sem digitar.
+2. **Fotografa primeiro.** A peça sai do barco e some; a foto é a única prova
    que não dá para refazer no escritório.
-5. Preenche o essencial: horímetro, quem executou, o que foi feito.
-6. Confirma. Salva local e entra na fila.
-7. Sincroniza sozinho quando houver sinal. Sem tela de espera.
+3. **Horímetro** — fotografado no painel, não datilografado.
+4. Confirma. Salva local e entra na fila.
+5. Sincroniza sozinho quando houver sinal. Sem tela de espera.
 
 O registro chega ao escritório como **rascunho**, nunca selado.
 
@@ -157,6 +250,26 @@ O registro chega ao escritório como **rascunho**, nunca selado.
 Saem do `servicosCategorias.ts` — fonte única, os mesmos da tela do painel. Não
 transcrever à mão: o PWA lê a mesma configuração, senão papel, painel e app
 divergem.
+
+### Quem preenche o quê
+
+A ficha de manutenção tem **43 campos, 11 obrigatórios**. É formulário de
+escritório: ninguém preenche em pé, no sol, com uma mão. Quem tenta ou abandona
+o app, ou preenche mentindo — que é pior. A ficha se divide por **quem tem a
+informação**:
+
+| No barco — o app | Na gaveta — a revisão |
+|---|---|
+| qual barco, categoria do serviço | valor |
+| foto da peça velha ao lado da nova | nota fiscal |
+| foto do horímetro | número da OS |
+| o que foi feito (lista, sem digitar) | código da peça |
+| quem estava lá e quando (o app sabe) | conferência e selo |
+
+**A trava de evidência não cai — muda de mão.** Nota fiscal continua obrigatória
+para selar, só que a exigência passa a ser de quem sela. A foto da peça velha ao
+lado da nova continua obrigatória no campo, porque é lá que ela existe: a peça
+sai do barco e some.
 
 Obrigatórios que a v1 esqueceu:
 
@@ -426,6 +539,12 @@ alteração de schema que este módulo pede.
   obrigatório, mínimo 10 caracteres).
 - Unificar com o fluxo de fotos por WhatsApp/Evolution. Fase futura.
 - Cadastro de embarcação nova pelo celular. O barco vem do painel.
+- **O mar.** O Atlas Campo é o chão da Marina: píer, área seca, galpão, barco no
+  berço. Registro em navegação — uma foto e uma observação ditada, longe de
+  qualquer rede — foi levantado em 10/09/2026 e **cortado de propósito**. Dois
+  modos de uso dobram o app para atender a exceção, e o modo mais fácil vira o
+  incompleto: em três meses ninguém faria mais registro completo. Volta a ser
+  conversa quando as Marinas estiverem usando o app todo dia e pedirem.
 
 ---
 
@@ -441,14 +560,16 @@ app principal. Ver "Onde cada coisa mora", no fim desta seção.
 
 ### E0 — Destravar as decisões · *do Marcos, não de quem implementa*
 
-As quatro da seção 3: sessão offline, inadimplência offline, qual byte é a prova
-e quem é o funcionário.
+As quatro da seção 3. **Três fechadas em 10/09/2026** — sessão offline (7 dias),
+inadimplência offline (entram assim mesmo) e quem é o funcionário (tem login,
+com sessão longa). **Falta a 3.3**, o byte da prova, que não bloqueia E1 nem E2
+e só aparece na E3.
 
-**Bloqueia tudo.** A 3.4 (quem é o funcionário) decide a E2 inteira: se for
+**Bloqueava tudo.** A 3.4 (quem é o funcionário) decide a E2 inteira: se for
 usuário Supabase de verdade, é login normal; se for rótulo dentro da sessão da
 Marina, muda o `created_by`, muda o RLS e muda o valor probatório do registro.
 
-**Pronto quando:** as quatro respondidas por escrito no PRD.
+**Pronto quando:** as quatro respondidas por escrito no PRD. **Três de quatro.**
 
 ---
 
@@ -471,7 +592,11 @@ avião** mostrando o shell, e lado a lado com o painel do Atlas é o mesmo produ
 
 ### E2 — Sessão e lista de barcos, offline
 
-- Login conforme a resposta da 3.4.
+- **Tela de login** (3.4): logo, matrícula e senha. O código da Marina é pedido
+  uma única vez, na primeira abertura, e não volta a aparecer.
+- Entra uma vez com rede e o app fica aberto. O `created_by` é dele.
+- **Tela de escolha do barco** separada da ficha — lista grande, busca por nome,
+  offline.
 - Ao entrar com rede: baixa os ativos da Marina e guarda no IndexedDB
   (id, nome, marca, modelo, ano — o suficiente para escolher).
 - Sessão sobrevive a fechar o app, pelo prazo decidido na 3.1.
@@ -485,6 +610,8 @@ avião** mostrando o shell, e lado a lado com o painel do Atlas é o mesmo produ
 
 - Campos vindos do `servicosCategorias.ts` do Atlas. Extração no **build**
   (esbuild → JSON), não cópia manual. As 13 fichas.
+- **Só os campos do barco** — ver "Quem preenche o quê", seção 6. Os da gaveta
+  ficam para a revisão, e o rascunho sobe incompleto de propósito.
 - Fluxo da seção 6: barco → categoria → **fotos primeiro** → campos → confirmar.
 - Câmera com `capture="environment"`, várias fotos, comprimidas no cliente,
   guardadas como **Blob**.
@@ -568,6 +695,11 @@ repo.
 
 ## 13. Histórico
 
+- **10/09/2026** — v3. O usuário deixa de ser "o funcionário" genérico e vira o
+  **colaborador de chão**. Fixa a definição do produto (**ponte** do chão para o
+  escritório) e o nome (**Atlas Campo**). Fecha 3.1, 3.2 e 3.4. Divide a ficha
+  entre o barco e a gaveta. Descobre que o offline é a borda do wi-fi da marina,
+  não o alto-mar — e corta o mar do escopo.
 - **10/09/2026** — v2. Reescrita sobre o sistema real depois de levantamento no
   código e no banco. Corrige: stack (não é Next.js), staging (usa
   `registros_rascunho`, não tabela nova), objeto de trabalho (serviço, não

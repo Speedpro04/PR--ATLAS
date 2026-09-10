@@ -29,15 +29,134 @@ O app principal é desktop, visto sentado. Este é usado em pé, no sol, com uma
 mão — é a única dimensão em que "idêntico ao Atlas" cede, e cede de forma
 controlada: o dedo ganha padding, a marca mantém a fonte.
 
+## O que ele é, em uma frase
+
+> **O Atlas Campo é a ponte do chão da Marina para o escritório. Só isso.**
+
+Frase do Marcos, 10/09/2026, depois de duas horas de conversa em que a ideia
+inchou três vezes. É **critério de corte**, não slogan: ponte não sela, não
+analisa, não vira relatório. Se algo não ajuda a travessia do píer até a mesa de
+quem revisa, está fora.
+
+O nome do app é **Atlas Campo** — nessa ordem. "Atlas" primeiro porque é o mesmo
+produto, com a mesma cara; "Campo" depois porque é onde ele vive. E cabe inteiro
+embaixo do ícone: 11 caracteres, sem reticências no Android nem no iPhone.
+
+---
+
 ## Estado em 10/09/2026
 
-**Nada implementado, e não deve começar ainda** — o Marcos pediu para segurar.
-Só os três documentos. A v1 da especificação chegou em
+**Nada implementado.** Só os três documentos. A v1 da especificação chegou em
 PDF e foi reescrita como `PRD.md` depois de levantamento no código real.
 
-Três decisões do Marcos travam o início (seção 3 do PRD): sessão offline,
-inadimplência durante o offline, e qual byte é a prova do SHA-256. Uma quarta —
-quem é o funcionário — decide se dá para confiar no `created_by`.
+Das quatro decisões que travam o início (seção 3 do PRD), **três fecharam** em
+10/09/2026: sessão offline, inadimplência offline e quem é o funcionário.
+**Falta a 3.3** — se o SHA-256 é do arquivo original da câmera ou do comprimido
+que sobe. Ela não bloqueia E1 nem E2; só aparece na E3, quando a foto entra.
+
+---
+
+## Quem é o usuário de verdade
+
+Não é "o funcionário". É o **colaborador de chão**: o cara com graxa na mão, sol
+na cara, celular molhado de maresia, segurando o aparelho com uma mão porque a
+outra segura a peça. Não é a secretária, não é o escritório.
+
+O Marcos corrigiu isso na conversa de 10/09/2026, e a correção derrubou uma
+premissa inteira: **a ficha de 43 campos é formulário de escritório.** Ninguém
+preenche aquilo em pé. Quem tenta ou abandona o app, ou preenche mentindo — que
+é pior, porque entra dado falso no dossiê com aparência de verdadeiro.
+
+Daí a divisão por **quem tem a informação** (PRD, seção 6): o barco fica com o
+que só existe lá e some se ninguém capturar na hora (fotos, horímetro, qual
+barco, quem, quando); a gaveta fica com o que nunca esteve no píer (valor, nota
+fiscal, OS, código da peça).
+
+**A trava de evidência não caiu — mudou de mão.** Nota fiscal continua
+obrigatória para selar, só que a cobrança é de quem sela. Isso não é
+afrouxamento: é parar de exigir de alguém um dado que ele não tem.
+
+---
+
+## A decisão do login foi e voltou — e o motivo importa
+
+Em 10/09/2026 a 3.4 foi decidida três vezes:
+
+1. **Login de verdade** (primeira resposta do Marcos).
+2. **Sem login**, aparelho vinculado à Marina e nome escolhido numa lista —
+   proposta do CLAUDE, com o argumento de que **a assinatura que vale é a de
+   quem sela**: como nada entra selado, o valor probatório vem da revisão, não
+   do login de quem capturou.
+3. **Login de verdade outra vez**, com o Marcos puxando de volta.
+
+O argumento do item 2 **continua correto** — e é por isso que ele quase passou.
+Só que resolve apenas o lado jurídico. O que ele não resolve é a **segunda-feira
+de manhã**: sem login o aparelho vira chave mestra, qualquer um registra como
+qualquer um, e quando chega um horímetro impossível no escritório não há com
+quem conversar — há só um nome que alguém tocou numa tela.
+
+**Responsabilidade não é só para a seguradora.** É para a conversa difícil.
+
+O PIN da v1 segue condenado, e a lista de nomes cai junto: os dois identificam
+por honra.
+
+E o jeito de ter login sem matar o app: **o atrito não é existir senha, é
+digitar senha com a mão suja, em pé, toda vez.** Login uma vez, sessão de 7
+dias, app sempre aberto — o modelo do WhatsApp, que tem login e ninguém lembra
+de ter feito.
+
+**A matrícula resolveu o login.** O pessoal do chão não tem e-mail, mas todo
+mundo sabe a própria matrícula — então a tela pede matrícula e senha, e o
+endereço que o Supabase exige é montado por baixo, invisível. Como matrícula
+repete entre Marinas, o app pede o **código da Marina uma única vez**, na
+primeira abertura, ainda no pátio com wi-fi.
+
+**E o cabeçalho do fichário vem preenchido** — quem fez, matrícula, dia, hora,
+barco. Nada disso é digitado: o app já sabe, e é justamente o que ninguém
+consegue reconstituir depois. Ele só confere. Ver seção 6 do PRD.
+
+Ainda em aberto: **o aparelho é da pessoa ou da Marina.** Se for compartilhado,
+sessão longa não basta sozinha — o dia inteiro sairia no nome de quem entrou de
+manhã.
+
+---
+
+## O offline é a borda do wi-fi, não o alto-mar
+
+Descoberta do Marcos, 10/09/2026, e ela reduziu o problema pela metade: **a
+marina tem wi-fi, ele só não alcança o fim do píer.**
+
+Então o cenário real não é "três dias no mar". É sair do sinal, trabalhar
+quarenta minutos no barco e voltar para a área coberta — o aparelho sincroniza
+sozinho, no bolso, sem ninguém apertar nada. Minutos, não dias. Os 7 dias de
+sessão são folga, não rotina.
+
+**A armadilha é o wi-fi, não a falta dele.** Sinal fraco é pior que sinal
+nenhum: na borda do alcance o celular fica agarrado a uma barra teimosa e não
+troca para o 4G. A requisição não volta nem dá erro, e o app trava com a
+bolinha girando enquanto o cara segura a peça. **É o momento exato em que ele
+desiste do app.** Por isso a regra: nunca esperar pela rede — poucos segundos
+sem resposta e vai para a fila, sem alarde, sem tela de erro.
+
+**Custo assumido do offline:** desligar alguém no painel não alcança um aparelho
+sem rede. O corte só vale quando ele tenta sincronizar. Com wi-fi na marina a
+janela é de horas.
+
+---
+
+## O mar foi cortado de propósito
+
+Chegou a existir um "modo mar" na conversa de 10/09/2026 — uma foto e uma
+observação ditada em áudio, para registro em navegação. Durou dez minutos: o
+Marcos cortou, e estava certo.
+
+O motivo de estar no PRD como fora de escopo, e não simplesmente esquecido:
+**dois modos de uso dobram o app para atender a exceção, e o modo mais fácil
+vira o incompleto.** Em três meses ninguém faria mais registro completo — todo
+mundo mandaria bilhete. A exceção comeria a regra.
+
+Volta a ser conversa quando as Marinas estiverem usando o app todo dia e
+pedirem.
 
 ---
 
@@ -117,6 +236,42 @@ Medido no navegador em 10/09/2026, com `getComputedStyle` e
 módulo importar Playfair Display "seguindo o CSS", nasce *parecido porém
 diferente* do Atlas — a pior categoria de erro visual, porque ninguém consegue
 apontar de onde vem o estranhamento. Ver [[uma-fonte-por-fato]].
+
+---
+
+## Como os dados de cada Marina não se misturam
+
+Conferido no banco em 10/09/2026, porque a pergunta é natural e a resposta some
+do lugar onde é óbvia.
+
+Não existe pasta por Marina. **Existe um carimbo em cada linha: `usuario_id`**,
+presente e obrigatório em `ativos`, `registros` e `registros_rascunho`. Cada
+barco pertence a uma Marina, e cada registro aponta para um barco — então o
+registro já nasce carimbado, ninguém precisa marcar à mão.
+
+E **nada é procurado por nome**. Duas marinas podem ter um barco chamado "Maria
+Bonita"; o sistema trabalha com o `id`, que é único. Nome é só para humano ler.
+
+Três muros, e o terceiro é mais fraco do que parece:
+
+1. **No celular** — conveniência, não segurança. Ele só baixou o que é dele.
+2. **No backend (`authz.py`)** — **este é o muro que vale** para tudo que vem do
+   app.
+3. **No banco (RLS)** — a política literal é `usuario_id = auth.uid()`, ligada
+   nas quatro tabelas. **Mas o backend conecta com `service_role`**
+   (`core/supabase.py`), e essa chave passa por cima do RLS por natureza. O RLS
+   protege o caminho do navegador direto, não o caminho do backend.
+
+É exatamente por isso que existe a regra **uma porta só**: com uma porta, a
+regra vive num lugar só e dá para auditar. Com duas, um dia elas discordam.
+
+**Achado de brinde:** `registros` tem política de INSERT e SELECT e **nenhuma de
+UPDATE ou DELETE** — a imutabilidade não é promessa de documento, está gravada
+no banco. `registros_rascunho` tem as quatro. "Rascunho é livre, selo é eterno"
+é literal.
+
+E as tabelas já separam `usuario_id` (o dono — a Marina) de `created_by` (quem
+fez). A estrutura para a 3.4 já existe, sem migration.
 
 ---
 
