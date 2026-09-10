@@ -24,6 +24,18 @@ export default {
         // Inter e o que aparece na tela do Atlas. Nada de Outfit.
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      screens: {
+        /**
+         * `deitado` — tela larga E baixa: tablet na horizontal, notebook curto.
+         *
+         * Os breakpoints do Tailwind olham so a largura, e por largura o tablet
+         * deitado (1024px) parece desktop. Mas o que falta ali nao e largura, e
+         * ALTURA: em 768px de altura o login empilhado passa 52px da tela. No
+         * barco o tablet vive deitado, entao esta e a orientacao que mais
+         * aparece — nao um caso de borda.
+         */
+        deitado: { raw: '(min-width: 900px) and (max-height: 860px)' },
+      },
     },
   },
   plugins: [],

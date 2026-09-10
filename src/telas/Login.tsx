@@ -51,13 +51,19 @@ export default function Login({ aoEntrar }: { aoEntrar: (s: Sessao) => void }) {
   }
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 py-12 topo-seguro">
-      <div className="w-full max-w-sm md:max-w-md">
-        <header className="text-center mb-14">
+    // `deitado` = tela larga e baixa (tablet na horizontal, notebook curto). Ali
+    // o empilhado nao cabe — sao 52px a mais que a altura util — e a saida e a
+    // mesma do Login do Atlas: marca de um lado, formulario do outro.
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 py-12 topo-seguro deitado:flex-row deitado:gap-16 deitado:px-12">
+      <div className="w-full max-w-sm md:max-w-md deitado:flex-1 deitado:flex deitado:justify-center deitado:max-w-none">
+        <header className="text-center mb-14 deitado:mb-0">
           <img
             src="/logo-transparent.png"
             alt=""
-            className="w-[200px] h-[200px] mx-auto mb-8 object-contain"
+            // 223px e o tamanho pedido, mas ele so vale onde ha altura para
+            // ele: em tela baixa a logo cede antes do formulario, porque
+            // ninguem entra no app pela logo.
+            className="w-[min(223px,26vh)] h-[min(223px,26vh)] mx-auto mb-8 object-contain"
           />
           <h1 className="text-3xl md:text-4xl font-serif font-bold text-white">
             Atlas Service
@@ -66,8 +72,10 @@ export default function Login({ aoEntrar }: { aoEntrar: (s: Sessao) => void }) {
             {MARINA}
           </p>
         </header>
+      </div>
 
-        <form onSubmit={submeter} className="space-y-8">
+      <div className="w-full max-w-sm md:max-w-md deitado:flex-1 deitado:max-w-md">
+        <form onSubmit={submeter} className="space-y-8 deitado:space-y-6">
           <div className="group">
             <label htmlFor="matricula" className="rotulo mb-3">
               Matrícula
