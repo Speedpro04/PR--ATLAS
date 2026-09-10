@@ -429,7 +429,144 @@ alteração de schema que este módulo pede.
 
 ---
 
-## 12. Histórico
+## 12. O serviço a ser feito
+
+Sete entregas, em ordem. Cada uma fecha sozinha e pode ser vista funcionando —
+nada de "só dá pra testar no fim".
+
+**Duas delas não são neste repo.** A E0 é decisão do Marcos, e a E6 é código do
+app principal. Ver "Onde cada coisa mora", no fim desta seção.
+
+---
+
+### E0 — Destravar as decisões · *do Marcos, não de quem implementa*
+
+As quatro da seção 3: sessão offline, inadimplência offline, qual byte é a prova
+e quem é o funcionário.
+
+**Bloqueia tudo.** A 3.4 (quem é o funcionário) decide a E2 inteira: se for
+usuário Supabase de verdade, é login normal; se for rótulo dentro da sessão da
+Marina, muda o `created_by`, muda o RLS e muda o valor probatório do registro.
+
+**Pronto quando:** as quatro respondidas por escrito no PRD.
+
+---
+
+### E1 — Esqueleto do PWA instalável
+
+- Projeto Vite + React 18 + TypeScript (mesma base do Atlas, sem Next).
+- `manifest.json`: nome "Atlas Campo", `display: standalone`, `theme_color`
+  `#010c20`, ícones 192/512 a partir do `favicon-v2.png`.
+- Service worker cacheando o shell (HTML/CSS/JS/fontes). Estratégia: shell em
+  cache-first, dados nunca.
+- Tema medido da seção 7.1 — cores, `rounded-sm`, Inter, `font-serif` nos
+  títulos. **Sem Playfair, sem Outfit.**
+- Layout responsivo base: 360–430 / 600–900 / 1024–1280, em pé e deitado.
+- `viewport-fit=cover` + `safe-area-inset`.
+
+**Pronto quando:** instala na tela de início em Android e iPhone, abre **em modo
+avião** mostrando o shell, e lado a lado com o painel do Atlas é o mesmo produto.
+
+---
+
+### E2 — Sessão e lista de barcos, offline
+
+- Login conforme a resposta da 3.4.
+- Ao entrar com rede: baixa os ativos da Marina e guarda no IndexedDB
+  (id, nome, marca, modelo, ano — o suficiente para escolher).
+- Sessão sobrevive a fechar o app, pelo prazo decidido na 3.1.
+- Tela de escolha do barco: busca por nome, funciona offline.
+
+**Pronto quando:** abre em modo avião, mostra a frota e deixa escolher um barco.
+
+---
+
+### E3 — Captura do registro
+
+- Campos vindos do `servicosCategorias.ts` do Atlas. Extração no **build**
+  (esbuild → JSON), não cópia manual. As 13 fichas.
+- Fluxo da seção 6: barco → categoria → **fotos primeiro** → campos → confirmar.
+- Câmera com `capture="environment"`, várias fotos, comprimidas no cliente,
+  guardadas como **Blob**.
+- Travas de evidência valendo offline: sem a foto obrigatória, não fecha.
+- Horímetro obrigatório e em destaque.
+- Rótulo 10px / valor 16px; alvo de toque 44px.
+
+**Pronto quando:** um registro completo de troca de óleo, com quatro fotos, é
+criado em modo avião e fica salvo depois de fechar e reabrir o app.
+
+---
+
+### E4 — Fila e sincronização
+
+- IndexedDB com os pendentes: registro + Blobs das fotos.
+- `client_id` (UUID do aparelho) em cada registro, para reenvio não duplicar.
+- Envio: `POST /registros/rascunho` no backend do Atlas — **nunca** Supabase
+  direto. Fotos pelo mesmo caminho de upload que o painel já usa.
+- Background Sync onde houver; fallback ao reabrir o app.
+- Estado visível por registro: `salvo no aparelho` × `enviando` × `enviado`.
+- Retentativa com espera crescente; falha permanente não some da tela.
+
+**Pronto quando:** três registros feitos offline sobem sozinhos ao voltar o
+sinal; desligar o Wi-Fi no meio do envio e religar **não** cria duplicata.
+
+---
+
+### E5 — Aviso de duplicidade
+
+- Ao escolher barco + categoria, consulta (só online): já existe rascunho ou
+  registro selado desta categoria, neste barco, nesta data, com horímetro
+  próximo?
+- Aviso **não bloqueante** — dois motores no mesmo dia é legítimo.
+- Marca o rascunho para o revisor.
+- Offline: pula a checagem, sem travar. O backend refaz na chegada.
+
+**Pronto quando:** o segundo registro igual avisa e deixa passar; o rascunho
+chega marcado.
+
+---
+
+### E6 — Painel de revisão · *no repo do Atlas*
+
+- Lista de rascunhos pendentes, mais antigos primeiro, com destaque para os
+  marcados como possível duplicata.
+- Todos os campos e as fotos.
+- **Aprovar** → chama o `selar` que já existe.
+- **Devolver** com motivo → volta para o funcionário.
+- **Descartar** → apaga o rascunho.
+
+**Única alteração de schema do projeto inteiro:** campo de motivo em
+`registros_rascunho`, para o "devolver". Migration no repo do Atlas.
+
+**Pronto quando:** aprovar no painel faz o registro virar append-only em
+`registros`, e o funcionário vê a devolução no celular.
+
+---
+
+### Onde cada coisa mora
+
+| Entrega | Repo | Observação |
+|---|---|---|
+| E0 | — | decisão, não código |
+| E1 a E5 | **Facilitador** | este repo |
+| E6 + migration | **YACTHS-ATLAS-OFICIAL** | sessão separada, aberta naquela pasta |
+
+O trabalho da E6 **não entra aqui**, e nada daqui entra lá. Quando chegar a hora
+da E6, abrir sessão em `C:\YACTHS-ATLAS-OFICIAL` e tratar como tarefa daquele
+repo.
+
+### O que não fazer em nenhuma entrega
+
+- Escrever direto no Supabase pelo navegador. Tudo passa pelo backend.
+- Inserir em `registros`. O app só cria **rascunho**; quem sela é o painel.
+- Copiar campo de ficha à mão.
+- Afrouxar trava de evidência para "facilitar".
+- Importar Playfair Display ou Outfit.
+- Encolher a base tipográfica em telas pequenas como o app principal faz.
+
+---
+
+## 13. Histórico
 
 - **10/09/2026** — v2. Reescrita sobre o sistema real depois de levantamento no
   código e no banco. Corrige: stack (não é Next.js), staging (usa
