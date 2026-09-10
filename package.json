@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "icones": "node scripts/gerar-icones.mjs"
+    "icones": "node scripts/gerar-icones.mjs",
+    "fichas": "node scripts/extrair-fichas.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.303.0",

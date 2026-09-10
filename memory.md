@@ -75,6 +75,13 @@ são de terceiros e ficaram de fora.
 conta que tem esses barcos chama-se "Yachts Atlas". O nome na tela é o que o
 Marcos pediu ver; o cadastro é outra coisa.
 
+**As fichas ja saem do Atlas sozinhas.** `npm run fichas` compila o
+`servicosCategorias.ts` do app principal com esbuild e grava
+`src/fichas/servicos.json`: **13 fichas, 292 campos (134 obrigatorios), 56
+slots de evidencia com 26 travas**. E o primeiro pedaco da E3, e existe para
+que campo nunca seja copiado a mao — app, painel e papel divergiriam com o
+tempo. O caminho do Atlas pode vir em ATLAS_DIR.
+
 **E2 em diante, nada.** Sessão, frota e fila ainda são provisórios em
 `src/nucleo/`, com barcos de exemplo que só existem em desenvolvimento. O
 navegador ainda não fala com o backend.
