@@ -18,9 +18,21 @@ O app principal fica em `C:\YACTHS-ATLAS-OFICIAL` (YACTHS, com o T antes do H).
 
 ---
 
+## Alvo de uso
+
+**Celular e tablet, os dois responsivos** — decisão do Marcos em 10/09/2026.
+Tablet não é celular esticado: no barco ele vive deitado, e é aí que a altura
+útil some. Faixa de 360px a 1280px, em pé e deitado. Detalhe na seção 7.1 do
+PRD.
+
+O app principal é desktop, visto sentado. Este é usado em pé, no sol, com uma
+mão — é a única dimensão em que "idêntico ao Atlas" cede, e cede de forma
+controlada: o dedo ganha padding, a marca mantém a fonte.
+
 ## Estado em 10/09/2026
 
-**Nada implementado.** Só os dois documentos. A v1 da especificação chegou em
+**Nada implementado, e não deve começar ainda** — o Marcos pediu para segurar.
+Só os três documentos. A v1 da especificação chegou em
 PDF e foi reescrita como `PRD.md` depois de levantamento no código real.
 
 Três decisões do Marcos travam o início (seção 3 do PRD): sessão offline,
@@ -76,22 +88,35 @@ abre o painel no escritório — se parecerem produtos diferentes, é porque sã
 dois produtos, e o Atlas deixa de ser *a* plataforma da Marina para virar *um
 app* que a Marina também usa.
 
-Duas armadilhas que já estão documentadas no PRD, mas que se esquecem fácil:
+Armadilhas que se esquecem fácil:
 
-- **Playfair Display nos títulos.** É a serifada que dá o ar do produto. Trocar
-  por uma sem serifa "porque lê melhor no celular" descaracteriza na hora.
+- **A serifada dos títulos é a do sistema, não a Playfair.** Ver abaixo.
 - **`rounded-sm` (2px), não mais.** São 296 usos contra 3 de `rounded-lg` no app.
   Canto quase reto é marca, não descuido. A tentação de arredondar mais em mobile
   é forte e está proibida.
-- **Fonte de 10px com `tracking-[0.3em]`** é a assinatura da interface. Para
-  caber no dedo, aumente o padding — nunca a fonte.
+- **Fonte de 10px com `tracking-[0.3em]`** é a assinatura da interface, e vale
+  para os **rótulos**. O valor que o funcionário digita vai a 16px — abaixo
+  disso o Safari do iOS dá zoom sozinho ao focar o campo.
 
-**Cuidado: o `tailwind.config.js` do app principal mente.** Ele declara
-`fontFamily.sans = ['Outfit', 'Inter']` e uma paleta com `#0F172A`, mas quem
-pinta a tela é o `index.css`, com `#010c20` e Playfair Display. São tokens
-mortos que ninguém usa. Copiar do `tailwind.config.js` produz um app parecido,
-porém errado — e ninguém percebe até colocar as duas telas lado a lado. Ver
-[[uma-fonte-por-fato]].
+### O CSS do app principal declara o que não acontece
+
+Medido no navegador em 10/09/2026, com `getComputedStyle` e
+`document.fonts.check` — não lido do CSS:
+
+- `index.css` manda `h1–h6` em **Playfair Display**. A tela mostra
+  **Georgia/ui-serif**, e a Playfair nem chega a ser ativada. Motivo: o CSS
+  aplica a fonte em `@layer base`, mas as páginas usam a utility `font-serif`
+  nos títulos (16 vezes só na home), e utility vence base no Tailwind. Como o
+  `tailwind.config.js` não define `serif`, a utility cai no default do
+  framework — Georgia.
+- `tailwind.config.js` declara `fontFamily.sans = ['Outfit', ...]` e paleta navy
+  em `#0F172A`. A tela usa **Inter** e **`#010c20`**. Outfit é baixada em
+  produção e nunca usada.
+
+**Consequência:** o padrão a copiar é o **medido**, não o declarado. Se este
+módulo importar Playfair Display "seguindo o CSS", nasce *parecido porém
+diferente* do Atlas — a pior categoria de erro visual, porque ninguém consegue
+apontar de onde vem o estranhamento. Ver [[uma-fonte-por-fato]].
 
 ---
 

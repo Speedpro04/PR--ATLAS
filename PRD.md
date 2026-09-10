@@ -213,12 +213,21 @@ Seleção de texto: fundo `#c5a059`, texto `#010c20`.
 
 ### Tipografia
 
-- **Corpo:** `Inter` — pesos 300 a 700.
-- **Títulos (h1–h6):** `Playfair Display`, serifada. É ela que dá o ar do
-  produto; sem ela o app vira genérico.
+Medido no navegador com `getComputedStyle`, não lido do CSS. O que o CSS
+declara e o que a tela mostra **não são a mesma coisa** neste projeto — ver o
+aviso no fim desta seção.
+
+- **Corpo, botões e rótulos:** `Inter`.
+- **Títulos (h1–h6):** a serifada do sistema —
+  `ui-serif, Georgia, Cambria, "Times New Roman", Times, serif`.
+  É o que a utility `font-serif` do Tailwind entrega, e é o que aparece em
+  "Marina Axos Hub" e em toda headline do produto.
+
+Para o PWA ficar idêntico basta carregar **Inter** e usar `font-serif` nos
+títulos. **Não** importar Playfair Display achando que é ela — não é.
 
 ```
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 ```
 
 ### Raio
@@ -251,8 +260,59 @@ focus:border-[#c5a059] outline-none
 ```
 
 O tamanho minúsculo com `tracking-[0.3em]` em caixa alta é a marca registrada da
-interface. **Ajuste para o dedo aumentando a área de toque (padding), não a
-fonte** — fonte grande quebra o tracking e descaracteriza.
+interface.
+
+### Celular e tablet — onde "idêntico" precisa ceder
+
+O painel do Atlas é desktop, visto sentado. Este app é usado **em pé, no sol,
+com uma mão**. Duas coisas não sobrevivem à cópia literal:
+
+**1. Separe rótulo de conteúdo.**
+
+| | Tamanho | Por quê |
+|---|---|---|
+| Rótulo (`HORÍMETRO`, `RESPONSÁVEL`) | 10px, caixa alta, `tracking-[0.3em]` | é a marca — mantém |
+| Valor que o funcionário lê e digita | **16px no mínimo** | é o que ele precisa enxergar |
+
+**16px em `input` não é escolha estética: abaixo disso o Safari do iOS dá zoom
+automático ao focar o campo**, e o formulário salta na cara do usuário a cada
+toque. É o defeito nº 1 de formulário em PWA.
+
+**2. Alvo de toque de 44px (iOS) / 48dp (Android), no mínimo.**
+
+O botão do Atlas tem `py-4` (16px) com fonte de 10px — dá cerca de 42px de
+altura, no limite. Aqui, cresça o **padding vertical**, mantendo fonte, peso e
+tracking. A caixa fica maior; a tipografia, idêntica.
+
+Regra geral: **o dedo ganha padding, a marca mantém a fonte.**
+
+### Responsivo nos dois, de verdade
+
+Celular **e** tablet são de primeira classe. Tablet não é "celular esticado" —
+numa faixa de 1024px, uma coluna única fica com linhas longas demais e o polegar
+não alcança o meio da tela.
+
+| Faixa | Alvo | Layout |
+|---|---|---|
+| 360–430px | celular em pé | coluna única, ação fixa no rodapé, ao alcance do polegar |
+| 600–900px | tablet em pé / celular deitado | coluna única mais larga, com limite de leitura |
+| 1024–1280px | tablet deitado | duas colunas — campos à esquerda, fotos à direita |
+
+Regras que valem em toda a faixa:
+
+- Nada de rolagem horizontal, em nenhuma largura.
+- Ação principal sempre alcançável sem trocar a mão de posição.
+- Foto em grade que muda de 2 para 3 ou 4 colunas conforme a largura, sem
+  distorcer proporção.
+- Testar **deitado** também: no barco o tablet vive na horizontal, e é onde a
+  altura útil some.
+- `viewport-fit=cover` mais `safe-area-inset` — iPhone com entalhe e barra
+  inferior comem a área da ação fixa.
+
+O app principal já é responsivo e reduz a base tipográfica em telas pequenas
+(`html { font-size: 14px }` até 768px, `13px` até 480px, no `index.css`).
+**Não repetir isso aqui:** encolher a raiz derruba junto o valor dos campos e
+reabre o zoom do iOS. Ajuste ponto a ponto.
 
 ### Logo
 
@@ -263,18 +323,30 @@ fonte** — fonte grande quebra o tracking e descaracteriza.
 Copiar os arquivos para este repo. Não recriar, não vetorizar de novo, não
 "limpar".
 
-### Aviso: duas fontes divergentes no app principal
+### Aviso: o CSS do app principal declara três coisas que não acontecem
 
-`tailwind.config.js` declara `fontFamily.sans = ['Outfit', 'Inter']` e uma
-paleta `navy`/`gold` com valores diferentes (`#0F172A`) dos que o `index.css`
-aplica de fato (`#010c20`). O `index.html` carrega Outfit, mas o CSS usa
-Playfair Display nos títulos.
+Medido em `localhost:5200` em 10/09/2026:
 
-**Quem vale é o `index.css`** — é o que pinta a tela. O `tailwind.config.js` tem
-tokens que ninguém usa.
+| O CSS declara | O que a tela faz |
+|---|---|
+| `index.css`: `h1–h6 { font-family: 'Playfair Display' }` | **Georgia / ui-serif.** `document.fonts.check('16px "Playfair Display"')` → `false` |
+| `tailwind.config.js`: `fontFamily.sans = ['Outfit', ...]` | **Inter.** Outfit é baixada e nunca usada (`check` → `false`) |
+| `tailwind.config.js`: paleta navy em `#0F172A` | **`#010c20`**, que vem do `index.css` |
 
-Ao copiar o tema para cá, copiar do `index.css`. E vale arrumar a divergência no
-app principal um dia, antes que alguém use a paleta errada de boa-fé.
+**Por que o Playfair não pega:** o `index.css` aplica a fonte dentro de
+`@layer base`, e a página usa a utility `font-serif` nos títulos
+(`<h1 class="... font-serif ...">`, 16 vezes só na home). Utility vence base no
+Tailwind. Como o `tailwind.config.js` não define `serif`, a utility cai no
+default do framework — Georgia.
+
+**Consequência para este módulo:** o padrão a copiar é o **medido**, não o
+declarado. Importar Playfair Display aqui faria o Facilitador ficar *parecido,
+porém diferente* do Atlas — a pior categoria de erro visual, porque ninguém
+identifica de onde vem o estranhamento.
+
+Duas fontes (Playfair e Outfit) são baixadas em produção sem serem usadas. Isso
+é do app principal, não deste módulo, mas vale arrumar lá um dia — junto com o
+`tailwind.config.js`, antes que alguém use a paleta errada de boa-fé.
 
 ---
 
@@ -339,6 +411,11 @@ alteração de schema que este módulo pede.
 - [ ] Campos do app saem do `servicosCategorias.ts`, não de cópia manual.
 - [ ] Cores, raio, tipografia e logo idênticos ao Atlas (seção 7.1) — aberto lado
       a lado com o painel, é o mesmo produto.
+- [ ] Responsivo de 360px a 1280px, em pé e deitado, sem rolagem horizontal em
+      nenhuma largura.
+- [ ] Nenhum campo de digitação abaixo de 16px — focar um input no iPhone não
+      pode dar zoom.
+- [ ] Alvo de toque de 44px/48dp na ação principal, alcançável com uma mão.
 
 ---
 

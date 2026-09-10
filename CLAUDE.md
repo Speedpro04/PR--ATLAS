@@ -44,14 +44,23 @@ para facilitar o preenchimento esvazia o produto.
 O PWA lê de lá. Nunca copiar campo à mão — app, painel e papel divergem com o
 tempo.
 
-**Identidade visual idêntica ao Atlas.** Cores, raio, tipografia e logo, sem
-variação "para mobile". Valores exatos na seção 7.1 do PRD. O essencial:
-fundo `#010c20`, ouro `#c5a059`, títulos em **Playfair Display**, corpo em
-**Inter**, `rounded-sm` (2px) em tudo, rótulos de 10px em caixa alta com
-`tracking-[0.3em]`. Para caber no dedo, aumente o padding — nunca a fonte.
+**Identidade visual idêntica ao Atlas.** Valores exatos na seção 7.1 do PRD.
+O essencial, **medido no navegador** (não lido do CSS): fundo `#010c20`, ouro
+`#c5a059`, títulos com a utility `font-serif` (= Georgia/ui-serif), corpo e
+botões em **Inter**, `rounded-sm` (2px) em tudo, rótulos de 10px em caixa alta
+com `tracking-[0.3em]`.
 
-Tema copia-se do `frontend/src/index.css`, **nunca** do `tailwind.config.js`:
-esse último declara Outfit e `#0F172A`, que não são usados em lugar nenhum.
+**Não importe Playfair Display nem Outfit.** O CSS do app principal declara as
+duas, e nenhuma é usada na tela — detalhes e medição no PRD 7.1. Copiar o
+declarado faz este módulo ficar *parecido porém diferente*, que é o pior
+resultado possível.
+
+**Celular e tablet, ambos responsivos.** O app é usado em pé, no sol, com uma
+mão. Onde "idêntico" cede: valor de campo a 16px no mínimo (abaixo disso o
+Safari do iOS dá zoom sozinho ao focar), alvo de toque de 44px/48dp, e layout
+que funciona de 360px a 1280px — celular em pé, tablet deitado, e o meio do
+caminho. Rótulo mantém os 10px. **O dedo ganha padding, a marca mantém a
+fonte.**
 
 ## Onde olhar no app principal
 
