@@ -112,9 +112,11 @@ quebra a cadeia de custódia sem ninguém perceber.
   ninguém ali sabe um e-mail de trabalho. Por baixo o Supabase continua
   exigindo um endereço, montado pelo app a partir da matrícula — o colaborador
   nunca o vê. Na tela dele são dois campos e o logo.
-- **Código da Marina, uma vez só.** Matrícula 001 existe em duas Marinas. Na
-  primeira abertura do app, ainda no pátio e com wi-fi, ele informa o código da
-  Marina; depois disso a tela fica só com matrícula e senha, para sempre.
+- **Uma Marina por aparelho, e o vínculo não é tela.** Matrícula 001 existe em
+  duas Marinas, então o aparelho precisa saber de qual ele é. Isso é assunto da
+  E2 e resolve-se no cadastro, **não com uma tela de código na frente do
+  login** — foi tentado em 10/09/2026 e cortado no mesmo dia: era um passo a
+  mais no caminho de quem só quer registrar um serviço.
 - Ele entra uma vez, com rede, e o app fica aberto (3.1).
 - O `created_by` do que ele captura é **dele**, não da Marina.
 - Saiu da empresa: a Marina desliga no painel.
@@ -210,8 +212,9 @@ banco, com regras de autorização diferentes das que já existem.
 
 Três telas, nessa ordem. Decidido em 10/09/2026.
 
-**Tela 1 — Login.** Logo do Atlas Campo, matrícula, senha. Só isso. Acontece uma
-vez; depois a sessão dura 7 dias (3.1) e ele não vê mais esta tela.
+**Tela 1 — Login.** Logo do Atlas, o nome da Marina, matrícula e senha. Só
+isso — nenhuma tela antes dela. Acontece uma vez; depois a sessão dura 7 dias
+(3.1) e ele não vê mais esta tela.
 
 **Tela 2 — Escolher o barco.** É o único momento em que ele precisa *procurar*
 alguma coisa, e por isso tem uma tela inteira só para ela: lista grande, busca
@@ -592,8 +595,8 @@ avião** mostrando o shell, e lado a lado com o painel do Atlas é o mesmo produ
 
 ### E2 — Sessão e lista de barcos, offline
 
-- **Tela de login** (3.4): logo, matrícula e senha. O código da Marina é pedido
-  uma única vez, na primeira abertura, e não volta a aparecer.
+- **Tela de login** (3.4): logo, nome da Marina, matrícula e senha. Nada antes
+  dela. O vínculo do aparelho com a Marina vem do cadastro, não de uma tela.
 - Entra uma vez com rede e o app fica aberto. O `created_by` é dele.
 - **Tela de escolha do barco** separada da ficha — lista grande, busca por nome,
   offline.

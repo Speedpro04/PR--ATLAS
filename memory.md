@@ -65,6 +65,16 @@ seja servido com status 200 e content-type certo — e o service worker de
 desenvolvimento registre e ative normalmente no mesmo ambiente. O teste que
 vale é o do PRD: instalar na tela de início e abrir em modo avião, no celular.
 
+A frota da tela deixou de ser inventada em 10/09/2026: são os dois ativos
+reais da conta do Marcos no Supabase do Atlas (Aurora Austral, Sunseeker
+Predator 74; e o YA-IATE-2015-3A38, Marlin Sea Focus, sem nome registrado),
+copiados à mão até a E2 baixar de verdade. As frotas das outras contas do banco
+são de terceiros e ficaram de fora.
+
+**Marina Axos Hub não existe como Marina no banco** — AXOS HUB é a empresa, e a
+conta que tem esses barcos chama-se "Yachts Atlas". O nome na tela é o que o
+Marcos pediu ver; o cadastro é outra coisa.
+
 **E2 em diante, nada.** Sessão, frota e fila ainda são provisórios em
 `src/nucleo/`, com barcos de exemplo que só existem em desenvolvimento. O
 navegador ainda não fala com o backend.
@@ -130,9 +140,14 @@ de ter feito.
 
 **A matrícula resolveu o login.** O pessoal do chão não tem e-mail, mas todo
 mundo sabe a própria matrícula — então a tela pede matrícula e senha, e o
-endereço que o Supabase exige é montado por baixo, invisível. Como matrícula
-repete entre Marinas, o app pede o **código da Marina uma única vez**, na
-primeira abertura, ainda no pátio com wi-fi.
+endereço que o Supabase exige é montado por baixo, invisível.
+
+**E uma tela de "código da Marina" foi tentada e cortada no mesmo dia.** A
+matrícula repete entre Marinas, então o aparelho precisa mesmo saber de qual
+ele é — mas resolver isso com uma tela na frente do login põe um passo a mais
+no caminho de quem só quer registrar um serviço, e o Marcos esbarrou nela no
+primeiro teste. O vínculo volta na E2, pelo cadastro. Vale como regra:
+**o Atlas Campo é ponte, e ponte não cobra pedágio na entrada.**
 
 **E o cabeçalho do fichário vem preenchido** — quem fez, matrícula, dia, hora,
 barco. Nada disso é digitado: o app já sabe, e é justamente o que ninguém

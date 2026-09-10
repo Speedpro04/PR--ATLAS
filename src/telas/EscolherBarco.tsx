@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { buscar, frotaLocal } from '../nucleo/frota'
-import { encerrarSessao, type Sessao } from '../nucleo/sessao'
+import { Anchor, LogOut, Search } from 'lucide-react'
+import { buscar, descreverBarco, frotaLocal, rotularBarco } from '../nucleo/frota'
+import { encerrarSessao, MARINA, type Sessao } from '../nucleo/sessao'
 
 /**
  * Tela 2 — Escolher o barco (PRD secao 6).
@@ -9,6 +10,9 @@ import { encerrarSessao, type Sessao } from '../nucleo/sessao'
  * E o unico momento em que o colaborador precisa PROCURAR alguma coisa, e por
  * isso tem uma tela inteira so para ela: lista grande, busca por nome, dedo
  * grosso. Ele nao digita o barco e nao cadastra — a frota vem do painel.
+ *
+ * O cabecalho segue o painel operacional do Atlas: icone, titulo em serifada
+ * e subtitulo de 10px com tracking 0.4em recuado sob o titulo.
  */
 export default function EscolherBarco({
   sessao,
@@ -23,62 +27,83 @@ export default function EscolherBarco({
   const achados = useMemo(() => buscar(frota, termo), [frota, termo])
 
   return (
-    <div className="min-h-[100dvh] pb-8 topo-seguro">
-      <header className="px-6 pt-8 pb-6 md:px-10 mx-auto max-w-2xl lg:max-w-none">
-        <div className="flex items-start justify-between gap-4">
+    <div className="min-h-[100dvh] p-4 md:p-8 pb-12 topo-seguro">
+      <header>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-white/5">
           <div>
-            <p className="rotulo">Matrícula {sessao.matricula}</p>
-            <h1 className="mt-3 text-2xl md:text-3xl font-light text-white">
-              Qual barco?
-            </h1>
+            <div className="flex items-center gap-3 mb-2">
+              <Anchor size={20} className="text-white/30" />
+              <h1 className="text-3xl md:text-4xl font-serif font-bold text-white">
+                Qual barco?
+              </h1>
+            </div>
+            <p className="text-white/40 text-[10px] uppercase tracking-[0.4em] font-black ml-12">
+              {MARINA} · Matrícula {sessao.matricula}
+            </p>
           </div>
+
           <button
             onClick={() => {
               encerrarSessao()
               aoSair()
             }}
-            className="text-[10px] uppercase tracking-[0.3em] text-white/30 font-black shrink-0 py-3"
+            className="btn-secundario md:w-auto md:px-8 flex items-center justify-center gap-3 self-start"
           >
+            <LogOut size={16} />
             Sair
           </button>
         </div>
 
-        <div className="group mt-8">
+        <div className="group py-8">
           <label htmlFor="busca" className="rotulo mb-3">
             Buscar
           </label>
-          <input
-            id="busca"
-            className="campo"
-            value={termo}
-            onChange={(e) => setTermo(e.target.value)}
-            placeholder="Nome, marca ou modelo"
-            autoCorrect="off"
-            spellCheck={false}
-          />
+          <div className="relative">
+            <Search
+              size={18}
+              className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-white/20"
+            />
+            <input
+              id="busca"
+              className="campo pl-14"
+              value={termo}
+              onChange={(e) => setTermo(e.target.value)}
+              placeholder="Nome, marca ou modelo"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+          </div>
         </div>
       </header>
 
-      <main className="px-6 md:px-10 mx-auto max-w-2xl lg:max-w-none">
+      <main>
         {achados.length === 0 ? (
-          <p className="mt-12 text-center text-sm text-white/30 leading-relaxed">
-            {frota.length === 0
-              ? 'Nenhum barco baixado ainda. Conecte no wi-fi da Marina uma vez.'
-              : 'Nenhum barco com esse nome.'}
-          </p>
+          <div className="text-center py-32 bg-white/[0.01] border border-white/5 rounded-sm">
+            <p className="text-white/30 text-[10px] uppercase tracking-[0.3em] font-black">
+              {frota.length === 0
+                ? 'Nenhum barco baixado ainda'
+                : 'Nenhum barco com esse nome'}
+            </p>
+          </div>
         ) : (
-          <ul className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-3">
+          <ul className="grid gap-4 md:gap-6 md:grid-cols-2 xl:grid-cols-3">
             {achados.map((b) => (
               <li key={b.id}>
                 <button
-                  onClick={() => navegar(`/barco/${b.id}`)}
-                  className="cartao w-full text-left px-5 py-5 transition-colors hover:border-[#c5a059]/40"
+                  onClick={() => navegar(`/barco/${encodeURIComponent(b.id)}`)}
+                  className="w-full text-left bg-white/[0.02] border border-white/5 p-6 rounded-sm transition-colors hover:border-[#c5a059]/40"
                   style={{ minHeight: 'var(--toque-min)' }}
                 >
-                  <span className="block text-lg text-white">{b.nome}</span>
-                  <span className="mt-2 block text-[10px] uppercase tracking-[0.3em] text-white/30 font-black">
-                    {b.marca} {b.modelo} · {b.ano}
-                  </span>
+                  <div className="flex items-center justify-between mb-3">
+                    <Anchor size={20} className="text-[#c5a059]" />
+                    <span className="text-[8px] uppercase tracking-widest text-white/30">
+                      {b.ano}
+                    </span>
+                  </div>
+                  <div className="text-xl font-bold text-white">{rotularBarco(b)}</div>
+                  <div className="text-[9px] text-white/40 uppercase tracking-widest mt-1">
+                    {descreverBarco(b)}
+                  </div>
                 </button>
               </li>
             ))}
