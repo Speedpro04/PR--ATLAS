@@ -59,8 +59,9 @@ export function rotularBarco(b: Barco): string {
   return b.nome ?? b.id
 }
 
+/** Marca e modelo, sem o ano — quem mostra descricao tambem mostra o ano. */
 export function descreverBarco(b: Barco): string {
-  return `${b.marca} ${b.modelo} · ${b.ano}`
+  return `${b.marca} ${b.modelo}`
 }
 
 /** Busca por nome, id, marca ou modelo. Sem acento e sem caixa — dedo grosso. */

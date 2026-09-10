@@ -41,7 +41,10 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
 
   const linhas: Array<[string, string]> = [
     ['Barco', rotularBarco(barco)],
+    // Sem o ano: ele ja tem linha propria, e "Sunseeker Predator 74 · 2022"
+    // quebra em 375px deixando o "· 2022" orfao na segunda linha.
     ['Embarcação', descreverBarco(barco)],
+    ['Ano', String(barco.ano)],
     ['Ativo', barco.id],
     ['Motor', barco.motor ? `${barco.motor}${barco.motores ? ` · ${barco.motores}x` : ''}` : '—'],
     ['Quem fez', sessao.nome],
@@ -72,7 +75,10 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
         </p>
       </header>
 
-      <main className="py-8 lg:grid lg:grid-cols-2 lg:gap-6">
+      {/* Duas colunas ja no tablet em pe: em coluna unica a 768px sobram 700px
+          entre o rotulo e o valor, e os dois deixam de parecer da mesma linha.
+          E o que o painel do Atlas faz com os cartoes dele em md. */}
+      <main className="py-8 md:grid md:grid-cols-2 md:gap-6">
         <section className="bg-white/[0.02] border border-white/5 p-6 rounded-sm">
           <div className="flex items-center justify-between mb-6">
             <ClipboardCheck size={20} className="text-[#c5a059]" />
@@ -82,10 +88,15 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
           </div>
 
           <dl className="space-y-5">
+            {/* O rotulo cede o tracking largo quando a coluna aperta; o valor
+                nunca quebra. Rotulo apertado ainda se le; "Sunseeker Predator
+                / 74" em duas linhas parece defeito. */}
             {linhas.map(([rotulo, valor]) => (
               <div key={rotulo} className="flex items-baseline justify-between gap-4">
-                <dt className="rotulo shrink-0">{rotulo}</dt>
-                <dd className="text-base text-white text-right">{valor}</dd>
+                <dt className="rotulo shrink min-w-0 tracking-[0.2em] md:tracking-[0.3em]">
+                  {rotulo}
+                </dt>
+                <dd className="text-base text-white text-right shrink-0">{valor}</dd>
               </div>
             ))}
           </dl>

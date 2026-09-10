@@ -29,28 +29,37 @@ export default function EscolherBarco({
   return (
     <div className="min-h-[100dvh] p-4 md:p-8 pb-12 topo-seguro">
       <header>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-white/5">
-          <div>
+        <div className="flex items-start justify-between gap-4 pb-8 border-b border-white/5">
+          <div className="min-w-0">
             <div className="flex items-center gap-3 mb-2">
-              <Anchor size={20} className="text-white/30" />
+              <Anchor size={20} className="text-white/30 shrink-0" />
               <h1 className="text-3xl md:text-4xl font-serif font-bold text-white">
                 Qual barco?
               </h1>
             </div>
-            <p className="text-white/40 text-[10px] uppercase tracking-[0.4em] font-black ml-12">
-              {MARINA} · Matrícula {sessao.matricula}
+            {/* Duas linhas de proposito no celular: "MATRICULA 4471" com
+                tracking 0.4em nao cabe ao lado do nome da Marina em 375px, e
+                quebrar no meio do numero deixa o 4471 orfao. */}
+            <p className="text-white/40 text-[10px] uppercase tracking-[0.4em] font-black ml-12 leading-relaxed">
+              {MARINA}
+              <span className="hidden md:inline"> · </span>
+              <span className="block md:inline">Matrícula {sessao.matricula}</span>
             </p>
           </div>
 
+          {/* Sair nao e a acao desta tela — escolher o barco e. No celular vira
+              icone, para nao ficar maior que os proprios barcos. */}
           <button
             onClick={() => {
               encerrarSessao()
               aoSair()
             }}
-            className="btn-secundario md:w-auto md:px-8 flex items-center justify-center gap-3 self-start"
+            aria-label="Sair"
+            className="shrink-0 flex items-center justify-center gap-3 rounded-sm border border-white/10 text-white/40 px-4 md:px-8 text-[10px] font-black uppercase tracking-[0.3em] transition-colors hover:text-white/80 hover:border-white/20"
+            style={{ minHeight: 'var(--toque-min)', minWidth: 'var(--toque-min)' }}
           >
             <LogOut size={16} />
-            Sair
+            <span className="hidden md:inline">Sair</span>
           </button>
         </div>
 
