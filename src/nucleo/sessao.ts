@@ -1,38 +1,74 @@
 /**
- * Sessao do colaborador — PROVISORIA.
+ * Sessao do colaborador (PRD 3.1 e 3.4).
  *
- * Guarda no localStorage so o que a tela precisa para navegar. A E2 troca isto
- * por sessao Supabase de verdade (login por matricula, 7 dias, refresh na
- * sincronizacao) e o IndexedDB passa a guardar frota e fila.
+ * Entra uma vez, com rede, e o app fica aberto por 7 dias. E o que o WhatsApp
+ * faz: tem login, e ninguem lembra de ter feito. O atrito nunca foi existir
+ * senha — e digitar senha com a mao suja, em pe, toda vez.
  *
- * Nada aqui e prova de nada: quem assina o registro e o `created_by` que o
- * backend grava, nao este arquivo.
+ * Onde mora: localStorage, nao IndexedDB. Sessao e um objeto pequeno lido na
+ * primeira linha do App, e IndexedDB e assincrono — daria uma tela em branco
+ * piscando antes de decidir entre login e frota. O supabase-js guarda no mesmo
+ * lugar, pelo mesmo motivo.
+ *
+ * O que este arquivo NAO e: prova de nada. Quem assina o registro e o
+ * `created_by` que o backend grava a partir do token, nao o que esta aqui.
  */
 
-const CHAVE_SESSAO = 'atlas-campo:sessao'
+import { entrar as apiEntrar } from './api'
+import { limparTudo } from './db'
+
+const CHAVE = 'atlas-service:sessao'
+const SETE_DIAS = 7 * 24 * 60 * 60 * 1000
 
 /**
- * Uma Marina por enquanto. Quando existirem duas com a mesma numeracao de
- * matricula, o aparelho precisa saber de qual ele e — e ai entra o vinculo,
- * na E2, vindo do painel. Nao antes: seria uma tela a mais no caminho de quem
- * so quer registrar um servico.
+ * Uma Marina por enquanto.
+ *
+ * O vinculo aparelho-Marina e a E2-a, no repo do Atlas: hoje `profiles` nao tem
+ * `marina_id` e `GET /ativos` filtra por dono do barco, entao um colaborador
+ * com conta propria receberia lista vazia. Ate la o nome fica aqui, so para a
+ * tela ter o que mostrar.
  */
 export const MARINA = 'Marina Axos Hub'
 
+/**
+ * Dominio do e-mail sintetico montado a partir da matricula.
+ *
+ * O colaborador nunca ve este endereco: na tela dele sao matricula e senha. O
+ * Supabase exige um e-mail, entao o app monta um — 4471 vira
+ * 4471@campo.yachtsatlas.online.
+ *
+ * ENQUANTO A E2-a NAO EXISTE, o campo tambem aceita e-mail digitado direto
+ * (qualquer coisa com "@"). E como se testa o caminho inteiro hoje, entrando
+ * com a conta da propria Marina. Quando o cadastro de colaborador existir, a
+ * matricula passa a funcionar e este atalho pode cair.
+ */
+const DOMINIO_MATRICULA = 'campo.yachtsatlas.online'
+
 export type Sessao = {
+  /** O que ele digitou: a matricula (ou o e-mail, no atalho de hoje). */
   matricula: string
-  nome: string
+  /** Id do usuario no Atlas. E ele que vira `created_by` no registro. */
+  usuarioId: string
+  token: string
+  tokenRenovacao: string
   /** ISO. A sessao dura 7 dias (PRD 3.1). */
   entrouEm: string
 }
 
-const SETE_DIAS = 7 * 24 * 60 * 60 * 1000
+export function identificadorParaEmail(entrada: string): string {
+  const limpo = entrada.trim()
+  if (limpo.includes('@')) return limpo.toLowerCase()
+  return `${limpo.toLowerCase()}@${DOMINIO_MATRICULA}`
+}
 
 export function sessaoAtual(): Sessao | null {
   try {
-    const cru = localStorage.getItem(CHAVE_SESSAO)
+    const cru = localStorage.getItem(CHAVE)
     if (!cru) return null
     const s = JSON.parse(cru) as Sessao
+    // Guarda contra formato antigo: uma sessao gravada por uma versao anterior
+    // do app nao tem token, e seguir com ela daria 401 em toda tela.
+    if (!s?.token || !s?.entrouEm) return null
     return venceu(s) ? null : s
   } catch {
     return null
@@ -43,23 +79,65 @@ export function venceu(s: Sessao): boolean {
   return Date.now() - new Date(s.entrouEm).getTime() > SETE_DIAS
 }
 
-export function abrirSessao(matricula: string, nome: string): Sessao {
+/**
+ * Entra de verdade, contra /api/v1/auth/login.
+ *
+ * Deixa a `FalhaApi` subir sem traduzir: a tela distingue senha errada
+ * ('credenciais') de "estou sem sinal" ('rede'), e sao conversas diferentes
+ * com quem esta segurando o celular.
+ */
+export async function entrar(identificador: string, senha: string): Promise<Sessao> {
+  const r = await apiEntrar(identificadorParaEmail(identificador), senha)
+
   const s: Sessao = {
-    matricula: matricula.trim(),
-    nome,
+    matricula: identificador.trim(),
+    usuarioId: r.user,
+    token: r.access_token,
+    tokenRenovacao: r.refresh_token,
     entrouEm: new Date().toISOString(),
   }
-  try {
-    localStorage.setItem(CHAVE_SESSAO, JSON.stringify(s))
-  } catch {
-    /* modo privativo: segue sem guardar, e a sessao morre ao fechar */
-  }
+  guardar(s)
   return s
 }
 
-export function encerrarSessao(): void {
+function guardar(s: Sessao): void {
   try {
-    localStorage.removeItem(CHAVE_SESSAO)
+    localStorage.setItem(CHAVE, JSON.stringify(s))
+  } catch {
+    /* modo privativo: segue sem guardar, e a sessao morre ao fechar o app */
+  }
+}
+
+/**
+ * Sai e apaga o que e do colaborador — inclusive a frota.
+ *
+ * A frota e a lista de barcos de uma Marina; deixa-la no aparelho depois da
+ * saida entregaria a carteira de clientes dela para o proximo que entrar.
+ */
+export async function encerrarSessao(): Promise<void> {
+  try {
+    localStorage.removeItem(CHAVE)
+  } catch {
+    /* idem */
+  }
+  await limparTudo()
+}
+
+/**
+ * O token venceu no meio do uso.
+ *
+ * O access_token do Supabase dura cerca de uma hora, e o backend do Atlas ainda
+ * NAO tem rota de refresh (E2-a, item 3) — no app principal quem renova e o
+ * supabase-js, que este app nao carrega. Ate a rota existir, token vencido
+ * derruba para o login.
+ *
+ * Isso NAO cumpre a 3.1 e e assumido como divida: os 7 dias so valem de fato
+ * quando o refresh existir. A frota fica guardada, entao voltar custa a senha,
+ * nao o download de novo.
+ */
+export function sessaoCaiu(): void {
+  try {
+    localStorage.removeItem(CHAVE)
   } catch {
     /* idem */
   }

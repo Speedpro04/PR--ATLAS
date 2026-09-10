@@ -31,16 +31,21 @@ controlada: o dedo ganha padding, a marca mantém a fonte.
 
 ## O que ele é, em uma frase
 
-> **O Atlas Campo é a ponte do chão da Marina para o escritório. Só isso.**
+> **O Atlas Service é a ponte do chão da Marina para o escritório. Só isso.**
 
 Frase do Marcos, 10/09/2026, depois de duas horas de conversa em que a ideia
 inchou três vezes. É **critério de corte**, não slogan: ponte não sela, não
 analisa, não vira relatório. Se algo não ajuda a travessia do píer até a mesa de
 quem revisa, está fora.
 
-O nome do app é **Atlas Campo** — nessa ordem. "Atlas" primeiro porque é o mesmo
-produto, com a mesma cara; "Campo" depois porque é onde ele vive. E cabe inteiro
-embaixo do ícone: 11 caracteres, sem reticências no Android nem no iPhone.
+O nome do app é **Atlas Service**. Levou seis tentativas em 10/09/2026 —
+Campo, Pátio, Oficina, Operações, Dock, Garage — e o critério que fechou foi:
+**nome de lugar exclui lugares**. O serviço acontece no berço com o barco na
+água, no pátio no seco, na oficina e no galpão; qualquer lugar escolhido deixa
+os outros de fora, e quem está no píer olha o ícone "Oficina" e pensa que não é
+para ele. "Service" nomeia o que se faz, não onde — e é o próprio objeto do app,
+o registro de serviço. O inglês não destoa: o painel já diz Fleet Excellence e
+Premium Vault Access. Cabe sob o ícone em 13 caracteres.
 
 ---
 
@@ -65,11 +70,11 @@ seja servido com status 200 e content-type certo — e o service worker de
 desenvolvimento registre e ative normalmente no mesmo ambiente. O teste que
 vale é o do PRD: instalar na tela de início e abrir em modo avião, no celular.
 
-A frota da tela deixou de ser inventada em 10/09/2026: são os dois ativos
-reais da conta do Marcos no Supabase do Atlas (Aurora Austral, Sunseeker
-Predator 74; e o YA-IATE-2015-3A38, Marlin Sea Focus, sem nome registrado),
-copiados à mão até a E2 baixar de verdade. As frotas das outras contas do banco
-são de terceiros e ficaram de fora.
+A frota passou por dois estágios no mesmo dia: primeiro os dois ativos reais da
+conta do Marcos copiados à mão (Aurora Austral, Sunseeker Predator 74; e o
+YA-IATE-2015-3A38, Marlin Sea Focus, sem nome registrado), depois o download de
+verdade na E2-b. **A cópia à mão saiu do código** — quem manda agora é o
+`GET /ativos`.
 
 **Marina Axos Hub não existe como Marina no banco** — AXOS HUB é a empresa, e a
 conta que tem esses barcos chama-se "Yachts Atlas". O nome na tela é o que o
@@ -82,9 +87,32 @@ slots de evidencia com 26 travas**. E o primeiro pedaco da E3, e existe para
 que campo nunca seja copiado a mao — app, painel e papel divergiriam com o
 tempo. O caminho do Atlas pode vir em ATLAS_DIR.
 
-**E2 em diante, nada.** Sessão, frota e fila ainda são provisórios em
-`src/nucleo/`, com barcos de exemplo que só existem em desenvolvimento. O
-navegador ainda não fala com o backend.
+**E2-b feita.** O app fala com o backend do Atlas de verdade: `src/nucleo/api.ts`
+(cliente do `/api/v1`, com prazo em toda chamada), `src/nucleo/db.ts` (IndexedDB
+sem biblioteca), sessão com token real e frota baixada do `GET /ativos` e
+guardada no aparelho. Os barcos copiados à mão saíram. Proxy do `/api` para a
+8080 no `vite.config.ts`.
+
+Testado no navegador a 375px: credencial errada devolve "Matrícula ou senha
+incorreta", o botão volta ao normal e os campos liberam. Fundo `rgb(1,12,32)`,
+serifada do sistema, campo em 16px, raio 2px, botão de 51px, sem rolagem
+lateral. **O caminho de sucesso do login não foi testado** — o assistente não
+digita senha, então isso é teste do Marcos.
+
+**A E2 não coube só neste repo, e isso foi a descoberta do dia.** Ver PRD, seção
+E2-a: `GET /ativos` filtra por dono do barco, então colaborador com conta
+própria recebe lista vazia; não existe vínculo colaborador↔Marina no banco (o
+`authz.py` espera `profiles.marina_id`, que nunca foi criada); e não há rota de
+refresh — o `/auth/login` devolve `refresh_token` e ninguém o consome, porque no
+Atlas quem renova é o `supabase-js`, que este app não carrega.
+
+**Dívida assumida:** sem a rota de refresh, o token vence em ~1h e derruba para
+o login. Os 7 dias da 3.1 só valem de fato depois da E2-a. A frota fica guardada,
+então voltar custa a senha, não o download.
+
+**Enquanto a E2-a não existe**, o campo de matrícula também aceita e-mail (basta
+conter "@") — é assim que dá para testar o caminho inteiro hoje, entrando com a
+conta da própria Marina.
 
 A v1 da especificação chegou em PDF e foi reescrita como `PRD.md` depois de
 levantamento no código real.
@@ -183,7 +211,7 @@ matrícula repete entre Marinas, então o aparelho precisa mesmo saber de qual
 ele é — mas resolver isso com uma tela na frente do login põe um passo a mais
 no caminho de quem só quer registrar um serviço, e o Marcos esbarrou nela no
 primeiro teste. O vínculo volta na E2, pelo cadastro. Vale como regra:
-**o Atlas Campo é ponte, e ponte não cobra pedágio na entrada.**
+**o Atlas Service é ponte, e ponte não cobra pedágio na entrada.**
 
 **E o cabeçalho do fichário vem preenchido** — quem fez, matrícula, dia, hora,
 barco. Nada disso é digitado: o app já sabe, e é justamente o que ninguém

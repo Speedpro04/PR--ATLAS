@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon-v2.png', 'logo-transparent.png'],
       manifest: {
-        name: 'Atlas Campo',
-        short_name: 'Atlas Campo',
+        name: 'Atlas Service',
+        short_name: 'Atlas Service',
         description: 'A ponte do chao da Marina para o escritorio',
         lang: 'pt-BR',
         start_url: '/',
@@ -68,5 +68,18 @@ export default defineConfig({
       devOptions: { enabled: false, type: 'module' },
     }),
   ],
-  server: { host: true, port: 6002 },
+  server: {
+    host: true,
+    port: 6002,
+    // O app fala com o backend do Atlas (uvicorn na 8080), igual ao painel.
+    // Em desenvolvimento o proxy resolve; em producao o Campo e servido pelo
+    // mesmo host do /api, entao o caminho relativo continua valendo e nao ha
+    // CORS para configurar.
+    proxy: {
+      '/api': {
+        target: process.env.ATLAS_API || 'http://localhost:8080',
+        changeOrigin: true,
+      },
+    },
+  },
 })

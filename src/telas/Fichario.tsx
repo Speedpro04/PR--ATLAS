@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ClipboardCheck, FileText, Ship } from 'lucide-react'
-import { acharBarco, descreverBarco, rotularBarco } from '../nucleo/frota'
+import { acharBarco, descreverBarco, rotularBarco, type Barco } from '../nucleo/frota'
 import { MARINA, type Sessao } from '../nucleo/sessao'
 
 /**
@@ -19,10 +19,27 @@ import { MARINA, type Sessao } from '../nucleo/sessao'
 export default function Fichario({ sessao }: { sessao: Sessao }) {
   const { id } = useParams()
   const navegar = useNavigate()
-  const barco = id ? acharBarco(decodeURIComponent(id)) : undefined
+
+  // O barco agora vem do IndexedDB, que e assincrono. `undefined` e "ainda
+  // procurando"; `null` e "procurei e nao achou" — a diferenca importa, porque
+  // mostrar "Barco nao encontrado" durante a busca acusa um erro que nao houve.
+  const [barco, setBarco] = useState<Barco | null | undefined>(undefined)
+
+  useEffect(() => {
+    let vivo = true
+    if (!id) return setBarco(null)
+    acharBarco(decodeURIComponent(id)).then((b) => vivo && setBarco(b))
+    return () => {
+      vivo = false
+    }
+  }, [id])
 
   // Congelado na abertura da ficha: e a hora do servico, nao a do envio.
   const abertura = useMemo(() => new Date(), [])
+
+  if (barco === undefined) {
+    return <div className="min-h-[100dvh]" aria-busy="true" />
+  }
 
   if (!barco) {
     return (
@@ -47,8 +64,11 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
     ['Ano', String(barco.ano)],
     ['Ativo', barco.id],
     ['Motor', barco.motor ? `${barco.motor}${barco.motores ? ` · ${barco.motores}x` : ''}` : '—'],
-    ['Quem fez', sessao.nome],
-    ['Matrícula', sessao.matricula],
+    // O nome do colaborador so existe quando a E2-a criar o cadastro dele; o
+    // /auth/login devolve apenas o id. Ate la vale a matricula, que e o que
+    // ele reconhece como sendo dele — nunca o uuid, que nao diz nada a
+    // ninguem no pier.
+    ['Quem fez', sessao.matricula],
     ['Dia', abertura.toLocaleDateString('pt-BR')],
     ['Hora', abertura.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })],
     ['Marina', MARINA],

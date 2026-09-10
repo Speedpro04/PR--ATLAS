@@ -2,9 +2,9 @@
 
 **Produto:** Yachts Atlas
 **Módulo:** PWA de captação em campo (doca, pátio, oficina)
-**Nome do app:** Atlas Campo
+**Nome do app:** Atlas Service
 **Público:** colaborador de chão da Marina — píer, área seca, galpão
-**Status:** especificação — 3 das 4 decisões fechadas; nada implementado
+**Status:** E1 e E2-b implementadas; 3 das 4 decisões fechadas (falta a 3.3)
 **Repositório:** módulo separado, não mistura com `YACTHS-ATLAS-OFICIAL`
 
 ---
@@ -17,7 +17,7 @@ e o que não é registrado não existe no dossiê.
 
 ## 2. O que este módulo é
 
-> **O Atlas Campo é a ponte do chão da Marina para o escritório. Só isso.**
+> **O Atlas Service é a ponte do chão da Marina para o escritório. Só isso.**
 
 Ponte não sela, não analisa, não vira relatório. Ponte leva. Se uma ideia não
 ajuda a travessia do píer até a mesa de quem revisa, ela está fora — e essa
@@ -286,7 +286,7 @@ Obrigatórios que a v1 esqueceu:
 ## 7. Requisitos do PWA
 
 ### Instalável
-`manifest.json` com ícone, nome curto ("Atlas Campo"), `display: standalone`,
+`manifest.json` com ícone, nome curto ("Atlas Service"), `display: standalone`,
 cor da marca. Android (Chrome) e iOS (Safari — Adicionar à Tela de Início).
 
 ### Offline-first
@@ -542,7 +542,7 @@ alteração de schema que este módulo pede.
   obrigatório, mínimo 10 caracteres).
 - Unificar com o fluxo de fotos por WhatsApp/Evolution. Fase futura.
 - Cadastro de embarcação nova pelo celular. O barco vem do painel.
-- **O mar.** O Atlas Campo é o chão da Marina: píer, área seca, galpão, barco no
+- **O mar.** O Atlas Service é o chão da Marina: píer, área seca, galpão, barco no
   berço. Registro em navegação — uma foto e uma observação ditada, longe de
   qualquer rede — foi levantado em 10/09/2026 e **cortado de propósito**. Dois
   modos de uso dobram o app para atender a exceção, e o modo mais fácil vira o
@@ -579,7 +579,7 @@ Marina, muda o `created_by`, muda o RLS e muda o valor probatório do registro.
 ### E1 — Esqueleto do PWA instalável
 
 - Projeto Vite + React 18 + TypeScript (mesma base do Atlas, sem Next).
-- `manifest.json`: nome "Atlas Campo", `display: standalone`, `theme_color`
+- `manifest.json`: nome "Atlas Service", `display: standalone`, `theme_color`
   `#010c20`, ícones 192/512 a partir do `favicon-v2.png`.
 - Service worker cacheando o shell (HTML/CSS/JS/fontes). Estratégia: shell em
   cache-first, dados nunca.
@@ -595,6 +595,9 @@ avião** mostrando o shell, e lado a lado com o painel do Atlas é o mesmo produ
 
 ### E2 — Sessão e lista de barcos, offline
 
+**A E2 não cabe só neste repo.** Levantado no código do Atlas em 10/09/2026,
+depois que a 3.4 fechou por login de verdade. Ver "E2-a", logo abaixo.
+
 - **Tela de login** (3.4): logo, nome da Marina, matrícula e senha. Nada antes
   dela. O vínculo do aparelho com a Marina vem do cadastro, não de uma tela.
 - Entra uma vez com rede e o app fica aberto. O `created_by` é dele.
@@ -603,9 +606,68 @@ avião** mostrando o shell, e lado a lado com o painel do Atlas é o mesmo produ
 - Ao entrar com rede: baixa os ativos da Marina e guarda no IndexedDB
   (id, nome, marca, modelo, ano — o suficiente para escolher).
 - Sessão sobrevive a fechar o app, pelo prazo decidido na 3.1.
-- Tela de escolha do barco: busca por nome, funciona offline.
 
 **Pronto quando:** abre em modo avião, mostra a frota e deixa escolher um barco.
+
+---
+
+### E2-a — O que falta no backend do Atlas · *repo `YACTHS-ATLAS-OFICIAL`*
+
+Três buracos. Os dois primeiros impedem o colaborador de ver qualquer barco; o
+terceiro torna a sessão de 7 dias impossível.
+
+**1. O colaborador não enxerga a frota da Marina.**
+
+`GET /api/v1/ativos` filtra por dono:
+
+```python
+if role != "admin":
+    q = q.or_(f"usuario_id.eq.{user_id},proprietario_email.eq.{email}")
+```
+
+Os barcos têm `usuario_id` = a Marina. O colaborador entra com conta própria
+(3.4), então `user_id` ≠ Marina e **a lista volta vazia**. Não há contorno pelo
+lado do PWA.
+
+Marcar o colaborador como `admin` faria ele ver a frota de **todas as Marinas**
+do banco — está fora de questão.
+
+**2. Não existe vínculo colaborador ↔ Marina.**
+
+O `authz.py` já tolera `ativos.marina_id` e `profiles.marina_id`, mas **nenhuma
+das duas colunas existe** no banco: `ativos` tem `usuario_id` e
+`proprietario_email`; `profiles` tem `user_role` e nada de Marina. O código é
+defensivo para um schema que nunca foi criado.
+
+**3. Não existe endpoint de refresh.**
+
+`POST /auth/login` devolve `refresh_token`, mas nenhuma rota o consome — no
+Atlas quem renova é o `supabase-js` dentro do navegador. O access_token do
+Supabase dura ~1 hora. **Sem uma rota de refresh, a sessão de 7 dias da 3.1 não
+existe:** o colaborador seria devolvido ao login toda hora, que é exatamente o
+atrito que a decisão queria evitar.
+
+#### Como o colaborador vai existir — decisão de 10/09/2026
+
+**Conta Supabase de verdade, com e-mail sintético montado a partir da
+matrícula.** O colaborador nunca vê o endereço; na tela dele são matrícula e
+senha.
+
+A alternativa era uma tabela `colaboradores` própria, com o backend emitindo o
+próprio token. Foi descartada: significa reimplementar hash de senha, emissão,
+expiração, refresh e revogação — autenticação caseira ao lado de uma que já
+funciona. O `get_current_user` também passaria a aceitar dois tipos de token, e
+todo endpoint do Atlas herdaria esse risco.
+
+Com conta real: o `created_by` vira uuid de verdade em `auth.users`, o rate
+limit e a auditoria do `/auth/login` valem de graça, e o `security.py` não muda.
+
+**Cuidado herdado:** o porteiro de inadimplência (`_barrar_se_devendo`) lê o
+`user_metadata`. O colaborador não paga nada — quem paga é a Marina. Ele precisa
+herdar o estado de acesso dela, ou vai ser barrado por uma dívida que não é dele.
+
+**Pronto quando:** o colaborador entra com matrícula e senha, `GET /ativos`
+devolve a frota da Marina dele — e só dela — e o token renova sem pedir senha.
 
 ---
 
@@ -678,12 +740,15 @@ chega marcado.
 | Entrega | Repo | Observação |
 |---|---|---|
 | E0 | — | decisão, não código |
-| E1 a E5 | **Facilitador** | este repo |
-| E6 + migration | **YACTHS-ATLAS-OFICIAL** | sessão separada, aberta naquela pasta |
+| E1, E2-b, E3, E4, E5 | **Facilitador** | este repo |
+| **E2-a** | **YACTHS-ATLAS-OFICIAL** | vínculo colaborador, login por matrícula, refresh |
+| E6 + migration do "devolver" | **YACTHS-ATLAS-OFICIAL** | painel de revisão |
 
-O trabalho da E6 **não entra aqui**, e nada daqui entra lá. Quando chegar a hora
-da E6, abrir sessão em `C:\YACTHS-ATLAS-OFICIAL` e tratar como tarefa daquele
-repo.
+Nada daqui entra lá, e nada de lá entra aqui. Para E2-a e E6, abrir sessão em
+`C:\YACTHS-ATLAS-OFICIAL` e tratar como tarefa daquele repo.
+
+**Correção:** este PRD dizia que a migration do "devolver" (E6) era a única
+alteração de schema do projeto. Não é — a da E2-a vem antes e é maior.
 
 ### O que não fazer em nenhuma entrega
 
@@ -700,7 +765,7 @@ repo.
 
 - **10/09/2026** — v3. O usuário deixa de ser "o funcionário" genérico e vira o
   **colaborador de chão**. Fixa a definição do produto (**ponte** do chão para o
-  escritório) e o nome (**Atlas Campo**). Fecha 3.1, 3.2 e 3.4. Divide a ficha
+  escritório) e o nome (**Atlas Service**). Fecha 3.1, 3.2 e 3.4. Divide a ficha
   entre o barco e a gaveta. Descobre que o offline é a borda do wi-fi da marina,
   não o alto-mar — e corta o mar do escopo.
 - **10/09/2026** — v2. Reescrita sobre o sistema real depois de levantamento no

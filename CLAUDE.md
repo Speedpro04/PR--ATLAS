@@ -8,19 +8,18 @@ não está no código.
 PWA de captação em campo para o funcionário da Marina registrar **serviço** no
 barco, offline, e sincronizar depois. Módulo **separado** do Yachts Atlas.
 
-**Estado: nada implementado, e o Marcos pediu para não começar ainda.**
+**Estado: E1 feita, E2-b em andamento.** Detalhe em `memory.md`.
 
-O serviço está detalhado na **seção 12 do PRD**: sete entregas em ordem (E0 a
-E6), cada uma com o que inclui e como se sabe que terminou. Siga aquela ordem.
+O serviço está detalhado na **seção 12 do PRD**: as entregas em ordem, cada uma
+com o que inclui e como se sabe que terminou. Siga aquela ordem.
 
-**E0 é dele, não sua** — as quatro decisões da seção 3. A 3.4 (quem é o
-funcionário) decide a E2 inteira e define se o `created_by` do registro selado
-vale alguma coisa. Não comece a E1 antes disso.
+Das quatro decisões da seção 3, **três fecharam**; falta a 3.3 (qual byte é a
+prova do SHA-256), que só bloqueia a E3.
 
-**E1 a E5 são deste repo. A E6 (painel de revisão) é do repo do Atlas** — abrir
-sessão em `C:\YACTHS-ATLAS-OFICIAL` para fazê-la. A migration do campo de motivo
-em `registros_rascunho` é a única alteração de schema do projeto inteiro, e mora
-lá também.
+**Este repo faz E1, E2-b, E3, E4, E5.** No repo do Atlas ficam a **E2-a**
+(vínculo colaborador↔Marina, login por matrícula e endpoint de refresh — sem
+isso o colaborador loga e vê frota vazia) e a **E6** (painel de revisão). Para
+qualquer uma delas, abrir sessão em `C:\YACTHS-ATLAS-OFICIAL`.
 
 ## Regras duras
 

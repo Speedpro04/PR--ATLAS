@@ -2,10 +2,26 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "atlas-campo",
+      "name": "atlas-service",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 6002
+    },
+    {
+      "name": "atlas-backend",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8080",
+        "--app-dir",
+        "C:\\YACTHS-ATLAS-OFICIAL\\backend"
+      ],
+      "port": 8080
     }
   ]
 }
