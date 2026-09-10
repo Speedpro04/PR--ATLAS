@@ -188,6 +188,96 @@ navegação secundária.
 
 ---
 
+## 7.1 Identidade visual — idêntica ao Atlas
+
+O funcionário tem que abrir o app e reconhecer o Atlas na hora. Mesmas cores,
+mesmo raio, mesma tipografia, mesmo logo. Nada de "variação para mobile".
+
+### Cores
+
+Valores do `frontend/src/index.css` do app principal — **são estes que aparecem
+na tela**, não os do `tailwind.config.js` (ver aviso no fim desta seção).
+
+| Token | Valor | Uso |
+|---|---|---|
+| `--navy-deep` | `#010c20` | fundo do body, texto sobre ouro |
+| `--navy-main` | `#021431` | superfície |
+| `--navy-light` | `#051b3d` | superfície elevada |
+| `--gold-primary` | `#c5a059` | botão primário, títulos de seção, foco |
+| `--gold-hover` | `#b38f4d` | hover do botão |
+| `--gold-text` | `#e5d5b7` | texto dourado claro |
+| `--glass-bg` | `rgba(255,255,255,0.02)` | fundo de campo |
+| `--glass-border` | `rgba(255,255,255,0.05)` | borda de cartão |
+
+Seleção de texto: fundo `#c5a059`, texto `#010c20`.
+
+### Tipografia
+
+- **Corpo:** `Inter` — pesos 300 a 700.
+- **Títulos (h1–h6):** `Playfair Display`, serifada. É ela que dá o ar do
+  produto; sem ela o app vira genérico.
+
+```
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+```
+
+### Raio
+
+`rounded-sm` (2px) — 296 usos no app contra 3 de `rounded-lg`. Cantos quase
+retos são decisão de marca, não descuido. `rounded-full` só em pílula, avatar e
+indicador.
+
+**Nunca arredondar mais "porque é mobile".**
+
+### Assinatura dos componentes
+
+Botão primário:
+```
+bg-[#c5a059] text-[#010c20] px-12 py-4 rounded-sm
+text-[10px] font-black uppercase tracking-[0.3em]
+hover:bg-[#b38f4d]
+```
+
+Rótulo de campo:
+```
+text-[10px] uppercase tracking-[0.3em] text-white/30 font-black
+group-focus-within:text-[#c5a059]
+```
+
+Campo de entrada:
+```
+bg-white/[0.03] border border-white/10 rounded-sm px-5 py-4
+focus:border-[#c5a059] outline-none
+```
+
+O tamanho minúsculo com `tracking-[0.3em]` em caixa alta é a marca registrada da
+interface. **Ajuste para o dedo aumentando a área de toque (padding), não a
+fonte** — fonte grande quebra o tracking e descaracteriza.
+
+### Logo
+
+`frontend/public/` do app principal: `logo-official.png`,
+`logo-transparent.png` (sobre fundo escuro), `logo-with-bg.png`,
+`favicon-v2.png` (ícone do PWA).
+
+Copiar os arquivos para este repo. Não recriar, não vetorizar de novo, não
+"limpar".
+
+### Aviso: duas fontes divergentes no app principal
+
+`tailwind.config.js` declara `fontFamily.sans = ['Outfit', 'Inter']` e uma
+paleta `navy`/`gold` com valores diferentes (`#0F172A`) dos que o `index.css`
+aplica de fato (`#010c20`). O `index.html` carrega Outfit, mas o CSS usa
+Playfair Display nos títulos.
+
+**Quem vale é o `index.css`** — é o que pinta a tela. O `tailwind.config.js` tem
+tokens que ninguém usa.
+
+Ao copiar o tema para cá, copiar do `index.css`. E vale arrumar a divergência no
+app principal um dia, antes que alguém use a paleta errada de boa-fé.
+
+---
+
 ## 8. Duplicidade — revisada
 
 A v1 checava nome de barco repetido. Isso resolve um problema que quase não
@@ -247,6 +337,8 @@ alteração de schema que este módulo pede.
 - [ ] Aprovar no painel chama `selar` e o registro vira append-only.
 - [ ] Funcionário de uma Marina não vê nem toca rascunho de outra.
 - [ ] Campos do app saem do `servicosCategorias.ts`, não de cópia manual.
+- [ ] Cores, raio, tipografia e logo idênticos ao Atlas (seção 7.1) — aberto lado
+      a lado com o painel, é o mesmo produto.
 
 ---
 

@@ -44,6 +44,15 @@ para facilitar o preenchimento esvazia o produto.
 O PWA lê de lá. Nunca copiar campo à mão — app, painel e papel divergem com o
 tempo.
 
+**Identidade visual idêntica ao Atlas.** Cores, raio, tipografia e logo, sem
+variação "para mobile". Valores exatos na seção 7.1 do PRD. O essencial:
+fundo `#010c20`, ouro `#c5a059`, títulos em **Playfair Display**, corpo em
+**Inter**, `rounded-sm` (2px) em tudo, rótulos de 10px em caixa alta com
+`tracking-[0.3em]`. Para caber no dedo, aumente o padding — nunca a fonte.
+
+Tema copia-se do `frontend/src/index.css`, **nunca** do `tailwind.config.js`:
+esse último declara Outfit e `#0F172A`, que não são usados em lugar nenhum.
+
 ## Onde olhar no app principal
 
 Este módulo depende do código do Atlas. Consulte, não duplique:

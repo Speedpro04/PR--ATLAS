@@ -67,6 +67,32 @@ isso facilita o preenchimento e esvazia o produto — o oposto do objetivo.
 `frontend/src/config/servicosCategorias.ts` (13 fichas). O PWA lê de lá. Copiar
 campo à mão faz app, painel e papel divergirem com o tempo.
 
+**Identidade visual idêntica, sem exceção.** Decisão do Marcos em 10/09/2026:
+mesmas cores, mesmo raio de botão, mesma tipografia, mesmo logo. Os valores
+estão na seção 7.1 do PRD.
+
+O motivo não é estética. O funcionário abre o app no píer e o dono da Marina
+abre o painel no escritório — se parecerem produtos diferentes, é porque são
+dois produtos, e o Atlas deixa de ser *a* plataforma da Marina para virar *um
+app* que a Marina também usa.
+
+Duas armadilhas que já estão documentadas no PRD, mas que se esquecem fácil:
+
+- **Playfair Display nos títulos.** É a serifada que dá o ar do produto. Trocar
+  por uma sem serifa "porque lê melhor no celular" descaracteriza na hora.
+- **`rounded-sm` (2px), não mais.** São 296 usos contra 3 de `rounded-lg` no app.
+  Canto quase reto é marca, não descuido. A tentação de arredondar mais em mobile
+  é forte e está proibida.
+- **Fonte de 10px com `tracking-[0.3em]`** é a assinatura da interface. Para
+  caber no dedo, aumente o padding — nunca a fonte.
+
+**Cuidado: o `tailwind.config.js` do app principal mente.** Ele declara
+`fontFamily.sans = ['Outfit', 'Inter']` e uma paleta com `#0F172A`, mas quem
+pinta a tela é o `index.css`, com `#010c20` e Playfair Display. São tokens
+mortos que ninguém usa. Copiar do `tailwind.config.js` produz um app parecido,
+porém errado — e ninguém percebe até colocar as duas telas lado a lado. Ver
+[[uma-fonte-por-fato]].
+
 ---
 
 ## Onde este módulo nasceu
