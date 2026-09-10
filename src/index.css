@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Identidade visual do Atlas — valores MEDIDOS na tela do app principal,
+   nao lidos do CSS declarado. Ver PRD 7.1.
+   --------------------------------------------------------------------------- */
+
+:root {
+  --navy-deep: #010c20;
+  --navy-main: #021431;
+  --navy-light: #051b3d;
+
+  --gold-primary: #c5a059;
+  --gold-hover: #b38f4d;
+  --gold-text: #e5d5b7;
+
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.05);
+
+  /* O dedo ganha padding, a marca mantem a fonte.
+     44px e o minimo do iOS; 48dp o do Android. Fica o maior. */
+  --toque-min: 48px;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    /* Nada de zoom por gesto acidental com a mao suja. */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--navy-deep);
+    color: #fff;
+    font-family: 'Inter', system-ui, sans-serif;
+    /* O app e usado em pe, com uma mao: nada de rolagem horizontal. */
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+  }
+
+  /* Titulos usam a serifada do sistema — e o que a utility font-serif do
+     Tailwind entrega, e e o que aparece em "Marina Axos Hub". NAO e
+     Playfair Display, por mais que o CSS do Atlas a declare. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+  }
+
+  ::selection {
+    background: var(--gold-primary);
+    color: var(--navy-deep);
+  }
+
+  /* Tirar o realce azul do toque no Android — nao existe no Atlas. */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  /* --- Botao primario ------------------------------------------------------
+     Assinatura do Atlas: bg ouro, texto navy, 10px, black, uppercase,
+     tracking 0.3em, rounded-sm. O py-4 original da ~42px de altura, no
+     limite do alvo de toque — aqui o padding cresce, a tipografia nao. */
+  .btn-primario {
+    @apply w-full bg-[#c5a059] text-[#010c20] rounded-sm
+           px-12 text-[10px] font-black uppercase tracking-[0.3em]
+           transition-colors duration-200
+           hover:bg-[#b38f4d] active:bg-[#b38f4d]
+           disabled:opacity-40 disabled:cursor-not-allowed;
+    min-height: var(--toque-min);
+    padding-top: 1.125rem;
+    padding-bottom: 1.125rem;
+  }
+
+  .btn-secundario {
+    @apply w-full bg-transparent text-white/50 rounded-sm border border-white/10
+           px-12 text-[10px] font-black uppercase tracking-[0.3em]
+           transition-colors duration-200
+           hover:text-white/80 hover:border-white/20;
+    min-height: var(--toque-min);
+    padding-top: 1.125rem;
+    padding-bottom: 1.125rem;
+  }
+
+  /* --- Rotulo de campo -----------------------------------------------------
+     10px em caixa alta com tracking 0.3em e a marca registrada da interface.
+     Mantem os 10px mesmo no celular. */
+  .rotulo {
+    @apply block text-[10px] uppercase tracking-[0.3em] text-white/30 font-black
+           transition-colors duration-200;
+  }
+
+  .group:focus-within .rotulo {
+    @apply text-[#c5a059];
+  }
+
+  /* --- Campo de entrada ----------------------------------------------------
+     16px no valor NAO e escolha estetica: abaixo disso o Safari do iOS da
+     zoom automatico ao focar, e o formulario salta na cara do usuario. */
+  .campo {
+    @apply w-full bg-white/[0.03] border border-white/10 rounded-sm
+           px-5 text-base text-white
+           outline-none transition-colors duration-200
+           placeholder:text-white/20
+           focus:border-[#c5a059];
+    font-size: 16px;
+    min-height: var(--toque-min);
+    padding-top: 0.875rem;
+    padding-bottom: 0.875rem;
+  }
+
+  /* --- Superficie ----------------------------------------------------------- */
+  .cartao {
+    @apply rounded-sm border;
+    background: var(--glass-bg);
+    border-color: var(--glass-border);
+  }
+
+  /* --- Acao fixa no rodape --------------------------------------------------
+     Ao alcance do polegar, e acima do entalhe do iPhone. */
+  .rodape-acao {
+    @apply fixed inset-x-0 bottom-0 z-20 border-t border-white/5 px-6 pt-4;
+    background: var(--navy-deep);
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+
+  .topo-seguro {
+    padding-top: env(safe-area-inset-top);
+  }
+}

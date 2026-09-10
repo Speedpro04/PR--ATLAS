@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon-v2.png" />
+
+    <!-- viewport-fit=cover: iPhone com entalhe e barra inferior comem a area
+         da acao fixa do rodape. O safe-area-inset em index.css devolve. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <meta name="theme-color" content="#010c20" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Atlas Campo" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+    <!-- Inter: e a fonte que aparece na tela do Atlas. Playfair Display e
+         Outfit sao declaradas no CSS do app principal e nunca usadas — nao
+         importar nenhuma das duas (PRD 7.1). -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>Atlas Campo</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

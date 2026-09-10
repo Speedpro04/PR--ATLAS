@@ -46,8 +46,31 @@ embaixo do ícone: 11 caracteres, sem reticências no Android nem no iPhone.
 
 ## Estado em 10/09/2026
 
-**Nada implementado.** Só os três documentos. A v1 da especificação chegou em
-PDF e foi reescrita como `PRD.md` depois de levantamento no código real.
+**E1 feita** — esqueleto do PWA instalável, e o visual das três telas de pé com
+dados de exemplo. Vite 5 + React 18 + TypeScript nas mesmas versões do Atlas,
+Tailwind com o tema **medido**, service worker gerado (16 arquivos de shell em
+precache) e manifest com os ícones tirados do `favicon-v2.png` do Atlas — que,
+apesar do nome, é um **JPEG por dentro** (assinatura ffd8).
+
+Servidor de desenvolvimento na **porta 6002**, pedido do Marcos.
+
+Conferido no navegador com `getComputedStyle`, não lido do CSS: fundo
+`rgb(1,12,32)`, Inter no corpo, serifada do sistema nos títulos, botão ouro de
+10px com tracking 3px e raio 2px, campo em 16px. Alvos de toque em 51px e 54px,
+acima dos 48 exigidos. Sem rolagem horizontal em 375px nem em 1024px.
+
+**O que ainda não foi provado:** o registro do service worker de produção falha
+dentro do navegador embutido do Claude Code com erro genérico, embora o script
+seja servido com status 200 e content-type certo — e o service worker de
+desenvolvimento registre e ative normalmente no mesmo ambiente. O teste que
+vale é o do PRD: instalar na tela de início e abrir em modo avião, no celular.
+
+**E2 em diante, nada.** Sessão, frota e fila ainda são provisórios em
+`src/nucleo/`, com barcos de exemplo que só existem em desenvolvimento. O
+navegador ainda não fala com o backend.
+
+A v1 da especificação chegou em PDF e foi reescrita como `PRD.md` depois de
+levantamento no código real.
 
 Das quatro decisões que travam o início (seção 3 do PRD), **três fecharam** em
 10/09/2026: sessão offline, inadimplência offline e quem é o funcionário.
