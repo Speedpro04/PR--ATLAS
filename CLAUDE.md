@@ -20,8 +20,10 @@ fica invisível. Sem ela, a Marina tem um app que engole informação.
 O serviço está detalhado na **seção 12 do PRD**: as entregas em ordem, cada uma
 com o que inclui e como se sabe que terminou. Siga aquela ordem.
 
-Das quatro decisões da seção 3, **três fecharam**; falta a 3.3 (qual byte é a
-prova do SHA-256), que só bloqueia a E3.
+As quatro decisões da seção 3 estão fechadas. A 3.3 (qual byte é a prova)
+resolveu-se assim: o upload do Atlas calcula o SHA-256 no servidor, então a foto
+sobe SEM COMPRESSÃO e a prova passa a ser o byte da câmera. Se a compressão
+entrar um dia, ela muda a prova — tem de ser decisão escrita, não otimização.
 
 **Este repo faz E1, E2-b, E3, E4, E5.** No repo do Atlas ficam a **E2-a**
 (vínculo colaborador↔Marina, login por matrícula e endpoint de refresh — sem
