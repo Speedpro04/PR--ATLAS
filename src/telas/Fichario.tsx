@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ClipboardCheck, FileText, Ship } from 'lucide-react'
 import { acharBarco, descreverBarco, rotularBarco, tamanhoEmPes, type Barco } from '../nucleo/frota'
-import { MARINA, type Sessao } from '../nucleo/sessao'
+import { identificadorCurto, MARINA, type Sessao } from '../nucleo/sessao'
 
 /**
  * Tela 3 — O fichario (PRD secao 6).
@@ -57,20 +57,24 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
   }
 
   const linhas: Array<[string, string]> = [
-    ['Ativo', rotularBarco(barco)],
+    // "Nome" so entra quando existe. Sem nome registrado `rotularBarco` devolve
+    // o proprio id, e a ficha repetia YA-IATE-2015-3A38 em duas linhas seguidas
+    // com rotulos diferentes — quem confere para de confiar na ficha inteira.
+    ...(barco.nome ? ([['Nome', barco.nome]] as Array<[string, string]>) : []),
     // Sem o ano: ele ja tem linha propria, e "Sunseeker Predator 74 · 2022"
     // quebra em 375px deixando o "· 2022" orfao na segunda linha.
     ['Embarcação', descreverBarco(barco)],
     // O porte e como se fala do barco na marina — vem antes do ano.
     ['Porte', tamanhoEmPes(barco) ?? '—'],
     ['Ano', String(barco.ano)],
-    ['ID', barco.id],
+    ['Ativo', barco.id],
     ['Motor', barco.motor ? `${barco.motor}${barco.motores ? ` · ${barco.motores}x` : ''}` : '—'],
     // O nome do colaborador so existe quando a E2-a criar o cadastro dele; o
     // /auth/login devolve apenas o id. Ate la vale a matricula, que e o que
     // ele reconhece como sendo dele — nunca o uuid, que nao diz nada a
-    // ninguem no pier.
-    ['Quem fez', sessao.matricula],
+    // ninguem no pier. Sem o dominio: "kd3online@gmail.com" com tracking largo
+    // estoura a coluna no celular.
+    ['Quem fez', identificadorCurto(sessao.matricula)],
     ['Dia', abertura.toLocaleDateString('pt-BR')],
     ['Hora', abertura.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })],
     ['Marina', MARINA],

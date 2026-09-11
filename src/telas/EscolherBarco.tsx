@@ -10,7 +10,7 @@ import {
   tamanhoEmPes,
   type Barco,
 } from '../nucleo/frota'
-import { encerrarSessao, MARINA, type Sessao } from '../nucleo/sessao'
+import { encerrarSessao, identificadorCurto, MARINA, type Sessao } from '../nucleo/sessao'
 
 /**
  * Tela 2 — Escolher o barco (PRD secao 6).
@@ -215,16 +215,3 @@ export default function EscolherBarco({
   )
 }
 
-/**
- * Como o colaborador aparece no cabecalho.
- *
- * Matricula sai com rotulo ("Matricula 4471"); e-mail sai so com a parte antes
- * do @, sem rotulo — "Matricula kd3online@gmail.com" e comprido e errado ao
- * mesmo tempo, porque e-mail nao e matricula. Provisorio: quando a E2-a criar o
- * cadastro, so chega matricula aqui.
- */
-function identificadorCurto(valor: string): string {
-  const v = (valor || '').trim()
-  if (v.includes('@')) return v.split('@')[0]
-  return `Matrícula ${v}`
-}

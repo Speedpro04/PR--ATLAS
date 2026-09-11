@@ -142,3 +142,17 @@ export function sessaoCaiu(): void {
     /* idem */
   }
 }
+
+/**
+ * Como o colaborador aparece na tela.
+ *
+ * Matricula sai com rotulo ("Matricula 4471"); e-mail sai so com a parte antes
+ * do @ — "Matricula kd3online@gmail.com" e comprido e errado ao mesmo tempo,
+ * porque e-mail nao e matricula, e com tracking largo estoura a coluna no
+ * celular. Provisorio: quando a E2-a criar o cadastro, so chega matricula aqui.
+ */
+export function identificadorCurto(valor: string): string {
+  const v = (valor || '').trim()
+  if (v.includes('@')) return v.split('@')[0]
+  return `Matrícula ${v}`
+}
