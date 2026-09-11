@@ -134,6 +134,34 @@
     </div>
 
     <script>
+      /**
+       * Aberta como arquivo (file://), esta pagina nao funciona — e falhava
+       * CALADA, que e pior.
+       *
+       * O iframe aponta para "/entrar", que em file:// nao existe, e o
+       * localStorage lanca SecurityError e mata o script antes de dimensionar
+       * a moldura. Resultado: caixa vazia esticada na largura da janela, com
+       * cara de defeito do app. Foi o que aconteceu em 10/09/2026, e custou
+       * uma rodada inteira ate alguem olhar a barra de endereco.
+       *
+       * A pagina precisa vir do servidor (npm run dev), como qualquer outra.
+       */
+      if (location.protocol === 'file:') {
+        document.body.innerHTML =
+          '<div style="max-width:640px;margin:14vh auto;padding:0 28px;text-align:center">' +
+          '<h1 style="font-family:ui-serif,Georgia,serif;font-size:30px;margin:0 0 20px">Abra pelo servidor</h1>' +
+          '<p style="color:rgba(255,255,255,.55);line-height:1.7;font-size:14px;margin:0 0 28px">' +
+          'Esta página só funciona servida pelo Vite. Aberta direto do disco, o quadro ' +
+          'fica vazio porque o app não tem de onde carregar.</p>' +
+          '<p style="font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.3);font-weight:900;margin:0 0 10px">Rode e acesse</p>' +
+          '<code style="display:block;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);' +
+          'padding:16px;border-radius:2px;color:#c5a059;font-size:14px">npm run dev</code>' +
+          '<code style="display:block;margin-top:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);' +
+          'padding:16px;border-radius:2px;color:#c5a059;font-size:14px">http://localhost:6002/telas.html</code>' +
+          '</div>'
+        throw new Error('telas.html aberta como arquivo')
+      }
+
       const CHAVE = 'atlas-service:sessao'
       const quadro = document.getElementById('quadro')
       const moldura = document.getElementById('moldura')
