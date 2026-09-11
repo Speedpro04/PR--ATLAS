@@ -84,14 +84,19 @@ function converter(a: any): Barco | null {
 }
 
 /**
- * Do maior para o menor, em pes.
+ * Do menor para o maior, em pes.
  *
  * Numa marina o porte e como se fala do barco — "o 74 pes" identifica melhor
  * que um nome que o colaborador talvez nao saiba de cor. Sem medida cadastrada
- * o ativo vai para o fim: melhor do que fingir que tem zero pe.
+ * o ativo vai para o fim: melhor do que fingir que tem zero pe, o que o
+ * jogaria para o topo desta ordem.
  */
 function ordenar(a: Barco, b: Barco): number {
-  if ((a.pes ?? 0) !== (b.pes ?? 0)) return (b.pes ?? 0) - (a.pes ?? 0)
+  // Sem medida vai para o fim, nao para o comeco — dai o Infinity no lugar do
+  // zero. Com `?? 0` o ativo sem porte encabecaria a lista dos menores.
+  const pa = a.pes ?? Infinity
+  const pb = b.pes ?? Infinity
+  if (pa !== pb) return pa - pb
   return rotularBarco(a).localeCompare(rotularBarco(b), 'pt-BR')
 }
 
