@@ -16,6 +16,23 @@ import { camposDaCategoria, campoVisivel, type CampoRecorte } from '../nucleo/re
 import { CHAVES_HORIMETRO, CHAVES_OBSERVACAO } from '../nucleo/rascunho'
 import { enviarRascunho, type ResultadoEnvio } from '../nucleo/envio'
 
+/**
+ * O aparelho tem camera de verdade para o `capture` usar?
+ *
+ * `capture="environment"` so vale em celular e tablet. No desktop o navegador
+ * IGNORA o atributo e abre o seletor de arquivos — entao "Tirar foto agora" e
+ * "Escolher do aparelho" fazem exatamente a mesma coisa, e a tela passa a
+ * mentir sobre o que os botoes fazem.
+ *
+ * Ponteiro grosso mais toque e a leitura mais confiavel que existe sem pedir
+ * permissao de camera: `enumerateDevices` exigiria autorizacao so para decidir
+ * o rotulo de um botao.
+ */
+function aparelhoTemCamera(): boolean {
+  if (typeof navigator === 'undefined' || typeof matchMedia === 'undefined') return false
+  return navigator.maxTouchPoints > 0 && matchMedia('(pointer: coarse)').matches
+}
+
 const ICONES: Record<string, typeof Wrench> = {
   Wrench, Navigation, Cog, Shield, Zap, LifeBuoy, Droplets, Paintbrush, Sofa,
   Sailboat, AlertTriangle, FileCheck, FileText,
@@ -48,6 +65,7 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
   const [salvo, setSalvo] = useState(false)
   const [envio, setEnvio] = useState<ResultadoEnvio | null>(null)
   const [retomado, setRetomado] = useState(false)
+  const [temCamera] = useState(aparelhoTemCamera)
   const [aviso, setAviso] = useState<string | null>(null)
   // Duas entradas, nao uma com botao duplo: `capture` e atributo do proprio
   // input, e alterna-lo por codigo nao e confiavel — parte dos Android le o
@@ -304,22 +322,43 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
               onChange={receberFotos}
             />
 
+            {/* No celular, a camera e o caminho do pier e vem primeiro. No
+                desktop ela nao existe: mostrar os dois botoes ali faria dois
+                caminhos identicos com nomes diferentes. */}
             <button
-              onClick={() => entradaCamera.current?.click()}
+              onClick={() =>
+                (temCamera ? entradaCamera : entradaGaleria).current?.click()
+              }
               className="w-full flex items-center justify-center gap-3 rounded-sm border border-dashed border-[#c5a059]/40 text-[#c5a059] py-8 text-[10px] font-black uppercase tracking-[0.3em] transition-colors hover:bg-[#c5a059]/5"
             >
-              <Camera size={20} />
-              {fotos.length ? 'Tirar outra foto' : 'Tirar foto agora'}
+              {temCamera ? <Camera size={20} /> : <ImageIcon size={20} />}
+              {temCamera
+                ? fotos.length
+                  ? 'Tirar outra foto'
+                  : 'Tirar foto agora'
+                : fotos.length
+                  ? 'Mais uma imagem'
+                  : 'Escolher imagem'}
             </button>
 
-            <button
-              onClick={() => entradaGaleria.current?.click()}
-              className="w-full flex items-center justify-center gap-3 mt-3 rounded-sm border border-white/10 text-white/40 py-4 text-[10px] font-black uppercase tracking-[0.25em] transition-colors hover:text-white/70 hover:border-white/25"
-              style={{ minHeight: 'var(--toque-min)' }}
-            >
-              <ImageIcon size={16} />
-              Escolher do aparelho
-            </button>
+            {temCamera && (
+              <button
+                onClick={() => entradaGaleria.current?.click()}
+                className="w-full flex items-center justify-center gap-3 mt-3 rounded-sm border border-white/10 text-white/40 py-4 text-[10px] font-black uppercase tracking-[0.25em] transition-colors hover:text-white/70 hover:border-white/25"
+                style={{ minHeight: 'var(--toque-min)' }}
+              >
+                <ImageIcon size={16} />
+                Já tenho a foto
+              </button>
+            )}
+
+            {!temCamera && (
+              // Diz por que o botao de camera nao esta aqui, em vez de deixar
+              // quem testa no computador achar que a funcao nao foi feita.
+              <p className="text-white/20 text-[9px] uppercase tracking-widest mt-3 text-center leading-relaxed">
+                No celular, este botão abre a câmera direto
+              </p>
+            )}
 
             {fotos.length > 0 && (
               <ul className="grid grid-cols-3 gap-3 mt-5">
