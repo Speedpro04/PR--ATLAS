@@ -15,12 +15,22 @@
  */
 
 const BANCO = 'atlas-service'
-const VERSAO = 1
+const VERSAO = 2
 
 /** Barcos baixados do Atlas. Chave: o id do ativo (YA-IATE-2022-A7F3). */
 export const LOJA_FROTA = 'frota'
 /** Pares chave/valor de controle: quando a frota foi baixada, etc. */
 export const LOJA_META = 'meta'
+/** Rascunhos de servico capturados no barco. Chave: o id local do rascunho. */
+export const LOJA_RASCUNHOS = 'rascunhos'
+/**
+ * Fotos, como Blob. Loja SEPARADA dos rascunhos de proposito.
+ *
+ * Uma foto de celular tem 2-5 MB; um rascunho de texto tem 2 kB. Guardar as
+ * duas coisas juntas faria toda leitura da lista de rascunhos arrastar dezenas
+ * de megabytes de imagem para a memoria so para desenhar um titulo.
+ */
+export const LOJA_FOTOS = 'fotos'
 
 let conexao: Promise<IDBDatabase> | null = null
 
@@ -41,6 +51,14 @@ function abrir(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(LOJA_META)) {
         db.createObjectStore(LOJA_META)
+      }
+      if (!db.objectStoreNames.contains(LOJA_RASCUNHOS)) {
+        db.createObjectStore(LOJA_RASCUNHOS, { keyPath: 'id' })
+      }
+      if (!db.objectStoreNames.contains(LOJA_FOTOS)) {
+        const fotos = db.createObjectStore(LOJA_FOTOS, { keyPath: 'id' })
+        // Buscar "as fotos deste rascunho" sem varrer a loja inteira.
+        fotos.createIndex('por_rascunho', 'rascunhoId', { unique: false })
       }
     }
 
@@ -128,6 +146,51 @@ export async function substituirTudo<T>(loja: string, itens: T[]): Promise<boole
   }
 }
 
+/**
+ * Grava um item numa loja com keyPath. Devolve false se nao deu.
+ *
+ * Ao contrario de `gravarMeta`, aqui a falha INTERESSA: e um rascunho ou uma
+ * foto que o colaborador acabou de fazer, e engolir o erro faria o trabalho
+ * dele sumir em silencio.
+ */
+export async function gravar<T>(loja: string, item: T): Promise<boolean> {
+  try {
+    await transacionar(loja, 'readwrite', (s) => s.put(item as any))
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Apaga um item por chave. */
+export async function apagar(loja: string, chave: IDBValidKey): Promise<boolean> {
+  try {
+    await transacionar(loja, 'readwrite', (s) => s.delete(chave))
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Itens de uma loja que casam com um indice — ex.: fotos de um rascunho. */
+export async function lerPorIndice<T>(
+  loja: string,
+  indice: string,
+  valor: IDBValidKey,
+): Promise<T[]> {
+  try {
+    const db = await abrir()
+    return await new Promise<T[]>((resolver, rejeitar) => {
+      const tx = db.transaction(loja, 'readonly')
+      const pedido = tx.objectStore(loja).index(indice).getAll(valor)
+      pedido.onsuccess = () => resolver(pedido.result ?? [])
+      pedido.onerror = () => rejeitar(pedido.error)
+    })
+  } catch {
+    return []
+  }
+}
+
 /** Grava um valor avulso na loja de controle. Silencioso se falhar. */
 export async function gravarMeta(chave: string, valor: unknown): Promise<void> {
   try {
@@ -139,7 +202,7 @@ export async function gravarMeta(chave: string, valor: unknown): Promise<void> {
 
 /** Apaga o que e do colaborador. Chamado ao sair. */
 export async function limparTudo(): Promise<void> {
-  for (const loja of [LOJA_FROTA, LOJA_META]) {
+  for (const loja of [LOJA_FROTA, LOJA_META, LOJA_RASCUNHOS, LOJA_FOTOS]) {
     try {
       await transacionar(loja, 'readwrite', (s) => s.clear())
     } catch {

@@ -1,29 +1,50 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ClipboardCheck, FileText, Ship } from 'lucide-react'
+import {
+  ArrowLeft, Camera, Check, ChevronRight, Cog, Droplets, FileCheck, FileText,
+  LifeBuoy, Navigation, Paintbrush, Sailboat, Shield, Ship, Sofa, Trash2,
+  AlertTriangle, Wrench, Zap,
+} from 'lucide-react'
 import { acharBarco, descreverBarco, rotularBarco, tamanhoEmPes, type Barco } from '../nucleo/frota'
 import { identificadorCurto, MARINA, type Sessao } from '../nucleo/sessao'
+import {
+  CATEGORIAS, CONDICOES, acharCategoria, apagarFoto, faltaNoRascunho,
+  fotosDoRascunho, guardarFoto, novoRascunho, salvarRascunho,
+  type CategoriaChave, type Foto, type Rascunho,
+} from '../nucleo/rascunho'
+
+const ICONES: Record<string, typeof Wrench> = {
+  Wrench, Navigation, Cog, Shield, Zap, LifeBuoy, Droplets, Paintbrush, Sofa,
+  Sailboat, AlertTriangle, FileCheck, FileText,
+}
 
 /**
- * Tela 3 — O fichario (PRD secao 6).
+ * Tela 3 — Registrar servico (PRD E3).
  *
- * O cabecalho VEM PREENCHIDO e o colaborador nao digita nada dele: quem fez,
- * matricula, dia, hora e barco o app ja sabe. Ele so confere — e se estiver
- * errado e porque entrou como outra pessoa, entao e bom que apareca grande.
+ * TRES PASSOS, nesta ordem, e a ordem e a parte importante:
  *
- * E justamente o que o escritorio precisa saber e o que ninguem consegue
- * reconstituir depois. Sai de graca.
+ *   1. O QUE  — escolhe a categoria. Um toque, sem digitar.
+ *   2. FOTO   — antes dos campos, nao depois. A peca sai do barco e some; o
+ *               horimetro anda. A foto e a unica coisa aqui que nao se refaz no
+ *               escritorio, entao ela vem primeiro, enquanto a mao ainda esta
+ *               na peca. Formulario que pede foto no fim recebe foto no fim —
+ *               quando a peca ja foi para o lixo.
+ *   3. DADOS  — o que foi feito, horimetro, condicao, observacao.
  *
- * O corpo da ficha (categoria, fotos, horimetro) e a E3.
+ * O rascunho vive no APARELHO. Nada daqui e selado, e a E4 e que sobe para o
+ * `registros_rascunho` do Atlas. O escritorio completa o que mora na gaveta
+ * (valor, nota fiscal, OS) e sela.
  */
 export default function Fichario({ sessao }: { sessao: Sessao }) {
   const { id } = useParams()
   const navegar = useNavigate()
 
-  // O barco agora vem do IndexedDB, que e assincrono. `undefined` e "ainda
-  // procurando"; `null` e "procurei e nao achou" — a diferenca importa, porque
-  // mostrar "Barco nao encontrado" durante a busca acusa um erro que nao houve.
   const [barco, setBarco] = useState<Barco | null | undefined>(undefined)
+  const [rascunho, setRascunho] = useState<Rascunho | null>(null)
+  const [fotos, setFotos] = useState<Foto[]>([])
+  const [salvo, setSalvo] = useState(false)
+  const [aviso, setAviso] = useState<string | null>(null)
+  const entradaFoto = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let vivo = true
@@ -34,12 +55,54 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
     }
   }, [id])
 
-  // Congelado na abertura da ficha: e a hora do servico, nao a do envio.
   const abertura = useMemo(() => new Date(), [])
 
-  if (barco === undefined) {
-    return <div className="min-h-[100dvh]" aria-busy="true" />
+  async function escolherCategoria(chave: CategoriaChave) {
+    if (!barco) return
+    const r = novoRascunho(barco.id, chave, sessao.matricula, sessao.usuarioId)
+    setRascunho(r)
+    await salvarRascunho(r)
   }
+
+  async function mudar(campos: Partial<Rascunho>) {
+    if (!rascunho) return
+    const novo = { ...rascunho, ...campos }
+    setRascunho(novo)
+    setSalvo(false)
+    await salvarRascunho(novo)
+  }
+
+  async function receberFotos(e: React.ChangeEvent<HTMLInputElement>) {
+    const arquivos = Array.from(e.target.files ?? [])
+    e.target.value = '' // permite fotografar a mesma coisa de novo
+    if (!rascunho || !arquivos.length) return
+
+    for (const a of arquivos) {
+      const f = await guardarFoto(rascunho.id, a, a.name || 'foto.jpg')
+      if (!f) {
+        setAviso('Não coube no aparelho. Apague alguma foto e tente de novo.')
+        break
+      }
+    }
+    const lista = await fotosDoRascunho(rascunho.id)
+    setFotos(lista)
+    setRascunho((r) => (r ? { ...r, fotos: lista.length } : r))
+  }
+
+  async function removerFoto(f: Foto) {
+    await apagarFoto(f)
+    const lista = await fotosDoRascunho(f.rascunhoId)
+    setFotos(lista)
+    setRascunho((r) => (r ? { ...r, fotos: lista.length } : r))
+  }
+
+  async function salvar() {
+    if (!rascunho) return
+    await salvarRascunho(rascunho)
+    setSalvo(true)
+  }
+
+  if (barco === undefined) return <div className="min-h-[100dvh]" aria-busy="true" />
 
   if (!barco) {
     return (
@@ -56,100 +119,260 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
     )
   }
 
-  const linhas: Array<[string, string]> = [
-    // "Nome" so entra quando existe. Sem nome registrado `rotularBarco` devolve
-    // o proprio id, e a ficha repetia YA-IATE-2015-3A38 em duas linhas seguidas
-    // com rotulos diferentes — quem confere para de confiar na ficha inteira.
-    ...(barco.nome ? ([['Nome', barco.nome]] as Array<[string, string]>) : []),
-    // Sem o ano: ele ja tem linha propria, e "Sunseeker Predator 74 · 2022"
-    // quebra em 375px deixando o "· 2022" orfao na segunda linha.
-    ['Embarcação', descreverBarco(barco)],
-    // O porte e como se fala do barco na marina — vem antes do ano.
-    ['Porte', tamanhoEmPes(barco) ?? '—'],
-    ['Ano', String(barco.ano)],
-    ['Ativo', barco.id],
-    ['Motor', barco.motor ? `${barco.motor}${barco.motores ? ` · ${barco.motores}x` : ''}` : '—'],
-    // O nome do colaborador so existe quando a E2-a criar o cadastro dele; o
-    // /auth/login devolve apenas o id. Ate la vale a matricula, que e o que
-    // ele reconhece como sendo dele — nunca o uuid, que nao diz nada a
-    // ninguem no pier. Sem o dominio: "kd3online@gmail.com" com tracking largo
-    // estoura a coluna no celular.
-    ['Quem fez', identificadorCurto(sessao.matricula)],
-    ['Dia', abertura.toLocaleDateString('pt-BR')],
-    ['Hora', abertura.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })],
-    ['Marina', MARINA],
-  ]
+  const categoria = rascunho ? acharCategoria(rascunho.categoria) : undefined
+  const falta = rascunho ? faltaNoRascunho(rascunho) : []
 
   return (
     <div className="min-h-[100dvh] p-4 md:p-8 pb-40 topo-seguro">
-      <header className="pb-8 border-b border-white/5">
+      <header className="pb-6 border-b border-white/5">
         <button
-          onClick={() => navegar('/')}
+          onClick={() => (rascunho ? setRascunho(null) : navegar('/'))}
           className="flex items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-white/30 font-black py-3 hover:text-white/60 transition-colors"
         >
           <ArrowLeft size={14} />
-          Trocar ativo
+          {rascunho ? 'Trocar serviço' : 'Trocar ativo'}
         </button>
         <div className="flex items-center gap-3 mt-4 mb-2">
-          <Ship size={20} className="text-[#c5a059]" />
-          <h1 className="text-3xl md:text-4xl font-serif font-bold text-white">
+          <Ship size={20} className="text-[#c5a059] shrink-0" />
+          <h1 className="text-2xl md:text-4xl font-serif font-bold text-white">
             {rotularBarco(barco)}
           </h1>
         </div>
-        <p className="text-white/40 text-[10px] uppercase tracking-[0.4em] font-black ml-12">
-          Rascunho de serviço · nada aqui é selado
+        <p className="text-white/40 text-[10px] uppercase tracking-[0.3em] md:tracking-[0.4em] font-black ml-12 leading-relaxed">
+          {descreverBarco(barco)}
+          {tamanhoEmPes(barco) && ` · ${tamanhoEmPes(barco)}`}
         </p>
       </header>
 
-      {/* Duas colunas ja no tablet em pe: em coluna unica a 768px sobram 700px
-          entre o rotulo e o valor, e os dois deixam de parecer da mesma linha.
-          E o que o painel do Atlas faz com os cartoes dele em md. */}
-      <main className="py-8 md:grid md:grid-cols-2 md:gap-6">
-        <section className="bg-white/[0.02] border border-white/5 p-6 rounded-sm">
-          <div className="flex items-center justify-between mb-6">
-            <ClipboardCheck size={20} className="text-[#c5a059]" />
-            <span className="text-[8px] uppercase tracking-widest text-white/30">
-              Conferir
-            </span>
-          </div>
+      {!rascunho ? (
+        /* ───────── passo 1: o que foi feito ───────── */
+        <main className="py-8">
+          <h2 className="rotulo mb-1">O que você fez?</h2>
+          <p className="text-white/25 text-[10px] uppercase tracking-[0.2em] font-black mb-6">
+            Um toque. O resto vem depois.
+          </p>
 
-          <dl className="space-y-5">
-            {/* O rotulo cede o tracking largo quando a coluna aperta; o valor
-                nunca quebra. Rotulo apertado ainda se le; "Sunseeker Predator
-                / 74" em duas linhas parece defeito. */}
-            {linhas.map(([rotulo, valor]) => (
-              <div key={rotulo} className="flex items-baseline justify-between gap-4">
-                <dt className="rotulo shrink min-w-0 tracking-[0.2em] md:tracking-[0.3em]">
-                  {rotulo}
-                </dt>
-                <dd className="text-base text-white text-right shrink-0">{valor}</dd>
+          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {CATEGORIAS.map((c) => {
+              const Icone = ICONES[c.icone] ?? Wrench
+              return (
+                <li key={c.chave}>
+                  <button
+                    onClick={() => escolherCategoria(c.chave)}
+                    className="w-full text-left bg-white/[0.02] border border-white/5 p-5 rounded-sm transition-colors hover:border-[#c5a059]/40 flex items-center gap-4"
+                    style={{ minHeight: 'var(--toque-min)' }}
+                  >
+                    <Icone size={22} className="text-[#c5a059] shrink-0" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-base font-bold text-white leading-tight">
+                        {c.rotulo}
+                      </span>
+                      <span className="block text-[9px] text-white/35 uppercase tracking-widest mt-1">
+                        {c.ajuda}
+                      </span>
+                    </span>
+                    <ChevronRight size={16} className="text-white/20 shrink-0" />
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </main>
+      ) : (
+        /* ───────── passos 2 e 3: foto e dados ───────── */
+        <main className="py-8 space-y-8 md:grid md:grid-cols-2 md:gap-8 md:space-y-0 md:items-start">
+          {/* FOTO PRIMEIRO. Ver o comentario do topo: e a unica coisa desta
+              tela que nao se refaz no escritorio. */}
+          <section className="bg-white/[0.02] border border-white/5 p-6 rounded-sm">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="rotulo">Fotografe agora</h2>
+              <span className="text-[10px] font-black text-[#c5a059] tracking-widest">
+                {fotos.length || '—'}
+              </span>
+            </div>
+            <p className="text-white/25 text-[10px] uppercase tracking-[0.2em] font-black mb-5 leading-relaxed">
+              A peça vai para o lixo. A foto não se refaz.
+            </p>
+
+            <input
+              ref={entradaFoto}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              multiple
+              className="hidden"
+              onChange={receberFotos}
+            />
+            <button
+              onClick={() => entradaFoto.current?.click()}
+              className="w-full flex items-center justify-center gap-3 rounded-sm border border-dashed border-[#c5a059]/40 text-[#c5a059] py-8 text-[10px] font-black uppercase tracking-[0.3em] transition-colors hover:bg-[#c5a059]/5"
+            >
+              <Camera size={20} />
+              {fotos.length ? 'Mais uma foto' : 'Abrir a câmera'}
+            </button>
+
+            {fotos.length > 0 && (
+              <ul className="grid grid-cols-3 gap-3 mt-5">
+                {fotos.map((f) => (
+                  <li key={f.id} className="relative">
+                    <Miniatura foto={f} />
+                    <button
+                      onClick={() => removerFoto(f)}
+                      aria-label="Apagar foto"
+                      className="absolute top-1 right-1 w-9 h-9 flex items-center justify-center rounded-sm bg-[#010c20]/85 text-white/60 hover:text-white transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="bg-white/[0.02] border border-white/5 p-6 rounded-sm space-y-6">
+            <div>
+              <div className="flex items-center gap-3 mb-5">
+                {(() => {
+                  const I = ICONES[categoria?.icone ?? 'Wrench'] ?? Wrench
+                  return <I size={20} className="text-[#c5a059]" />
+                })()}
+                <h2 className="text-lg font-bold text-white">{categoria?.rotulo}</h2>
               </div>
-            ))}
-          </dl>
 
-          <p className="mt-8 text-[9px] text-white/40 uppercase tracking-widest leading-relaxed">
-            O app já sabe. Se um nome estiver errado, a sessão é de outra pessoa.
-          </p>
-        </section>
+              <label htmlFor="servico" className="rotulo mb-3">
+                O que foi feito
+              </label>
+              <input
+                id="servico"
+                className="campo"
+                value={rascunho.servico}
+                onChange={(e) => mudar({ servico: e.target.value })}
+                placeholder="Ex: troquei o óleo do motor de bombordo"
+                autoCapitalize="sentences"
+              />
+            </div>
 
-        <section className="mt-4 md:mt-6 lg:mt-0 bg-white/[0.01] border border-white/5 p-6 rounded-sm text-center py-20">
-          <FileText size={20} className="text-white/20 mx-auto mb-5" />
-          <p className="text-white/30 text-[10px] uppercase tracking-[0.3em] font-black">
-            Próxima entrega
-          </p>
-          <p className="mt-4 text-[9px] text-white/40 uppercase tracking-widest leading-relaxed">
-            O que foi feito · fotos · horímetro
-          </p>
-        </section>
-      </main>
+            <div>
+              <label htmlFor="horimetro" className="rotulo mb-3">
+                Horímetro
+              </label>
+              <input
+                id="horimetro"
+                className="campo"
+                value={rascunho.horimetro}
+                onChange={(e) => mudar({ horimetro: e.target.value })}
+                placeholder="Leitura de agora"
+                // decimal e nao numeric: horimetro tem virgula, e o teclado
+                // numerico puro esconde a tecla dela em boa parte dos Android.
+                inputMode="decimal"
+              />
+            </div>
 
-      <div className="rodape-acao">
-        <div className="mx-auto max-w-2xl lg:max-w-md">
-          <button className="btn-primario" disabled>
-            Salvar rascunho
-          </button>
+            <div>
+              <span className="rotulo mb-3 block">Como ficou</span>
+              <div className="grid grid-cols-3 gap-2">
+                {CONDICOES.map((c) => {
+                  const ativa = rascunho.condicao === c.valor
+                  return (
+                    <button
+                      key={c.valor}
+                      onClick={() => mudar({ condicao: c.valor })}
+                      aria-pressed={ativa}
+                      className={`rounded-sm border px-2 py-4 text-[10px] font-black uppercase tracking-[0.15em] transition-colors ${
+                        ativa
+                          ? 'bg-[#c5a059] text-[#010c20] border-[#c5a059]'
+                          : 'border-white/10 text-white/40 hover:border-white/25'
+                      }`}
+                      style={{ minHeight: 'var(--toque-min)' }}
+                    >
+                      {c.rotulo}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-white/25 text-[9px] uppercase tracking-widest mt-3">
+                {CONDICOES.find((c) => c.valor === rascunho.condicao)?.ajuda}
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="obs" className="rotulo mb-3">
+                Observação
+              </label>
+              <textarea
+                id="obs"
+                rows={4}
+                className="campo resize-none"
+                value={rascunho.observacao}
+                onChange={(e) => mudar({ observacao: e.target.value })}
+                placeholder="O que o escritório precisa saber e não está na foto"
+              />
+            </div>
+
+            {/* O que o app ja sabe, pequeno: e conferencia, nao trabalho. */}
+            <p className="text-[9px] text-white/30 uppercase tracking-widest leading-relaxed border-t border-white/5 pt-5">
+              {identificadorCurto(sessao.matricula)} · {MARINA}
+              <br />
+              {abertura.toLocaleDateString('pt-BR')} às{' '}
+              {abertura.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+          </section>
+        </main>
+      )}
+
+      {rascunho && (
+        <div className="rodape-acao">
+          <div className="mx-auto max-w-2xl lg:max-w-md">
+            {aviso && (
+              <p role="alert" className="text-[#e5d5b7] text-xs mb-3 text-center">
+                {aviso}
+              </p>
+            )}
+            {/* O que falta aparece ANTES do toque, nao como erro depois dele:
+                botao que so diz "nao" quando ja foi apertado ensina a nao
+                apertar. */}
+            {falta.length > 0 && (
+              <p className="text-white/30 text-[9px] uppercase tracking-widest text-center mb-3">
+                Falta {falta.join(' · ')}
+              </p>
+            )}
+            <button
+              onClick={salvar}
+              disabled={falta.length > 0 || salvo}
+              className="btn-primario flex items-center justify-center gap-3"
+            >
+              {salvo ? <Check size={16} /> : null}
+              {salvo ? 'Guardado no aparelho' : 'Salvar rascunho'}
+            </button>
+            <p className="text-center text-[9px] uppercase tracking-widest text-white/20 font-black mt-3">
+              Fica no celular até o escritório revisar
+            </p>
+          </div>
         </div>
-      </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Miniatura da foto.
+ *
+ * `createObjectURL` reserva memoria que so sai com `revokeObjectURL` — sem o
+ * cleanup, cada foto vista fica presa ate a aba fechar, e num celular de
+ * entrada com vinte fotos isso derruba o app.
+ */
+function Miniatura({ foto }: { foto: Foto }) {
+  const [url, setUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    const u = URL.createObjectURL(foto.arquivo)
+    setUrl(u)
+    return () => URL.revokeObjectURL(u)
+  }, [foto])
+
+  return (
+    <div className="aspect-square rounded-sm overflow-hidden bg-white/[0.03] border border-white/5">
+      {url && <img src={url} alt="" className="w-full h-full object-cover" />}
     </div>
   )
 }
