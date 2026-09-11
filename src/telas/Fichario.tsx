@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Camera, Check, ChevronRight, Cog, Droplets, FileCheck, FileText,
   LifeBuoy, Navigation, Paintbrush, Sailboat, Shield, Ship, Sofa, Trash2,
-  AlertTriangle, Upload, Wrench, Zap,
+  AlertTriangle, Upload, Wrench, Zap, Image as ImageIcon,
 } from 'lucide-react'
 import { acharBarco, descreverBarco, rotularBarco, tamanhoEmPes, type Barco } from '../nucleo/frota'
 import { identificadorCurto, MARINA, type Sessao } from '../nucleo/sessao'
@@ -49,7 +49,11 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
   const [envio, setEnvio] = useState<ResultadoEnvio | null>(null)
   const [retomado, setRetomado] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
-  const entradaFoto = useRef<HTMLInputElement>(null)
+  // Duas entradas, nao uma com botao duplo: `capture` e atributo do proprio
+  // input, e alterna-lo por codigo nao e confiavel — parte dos Android le o
+  // atributo uma vez so, quando o elemento nasce.
+  const entradaCamera = useRef<HTMLInputElement>(null)
+  const entradaGaleria = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let vivo = true
@@ -277,8 +281,13 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
               A peça vai para o lixo. A foto não se refaz.
             </p>
 
+            {/* `capture` abre a camera traseira direto no celular. Mas em
+                parte dos Android ele TRAVA na camera e some com a galeria —
+                quem ja fotografou a peca antes de abrir o app ficaria sem
+                anexar. Dai as duas portas, e a camera em primeiro por ser o
+                caminho do pier. */}
             <input
-              ref={entradaFoto}
+              ref={entradaCamera}
               type="file"
               accept="image/*"
               capture="environment"
@@ -286,12 +295,30 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
               className="hidden"
               onChange={receberFotos}
             />
+            <input
+              ref={entradaGaleria}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={receberFotos}
+            />
+
             <button
-              onClick={() => entradaFoto.current?.click()}
+              onClick={() => entradaCamera.current?.click()}
               className="w-full flex items-center justify-center gap-3 rounded-sm border border-dashed border-[#c5a059]/40 text-[#c5a059] py-8 text-[10px] font-black uppercase tracking-[0.3em] transition-colors hover:bg-[#c5a059]/5"
             >
               <Camera size={20} />
-              {fotos.length ? 'Mais uma foto' : 'Abrir a câmera'}
+              {fotos.length ? 'Tirar outra foto' : 'Tirar foto agora'}
+            </button>
+
+            <button
+              onClick={() => entradaGaleria.current?.click()}
+              className="w-full flex items-center justify-center gap-3 mt-3 rounded-sm border border-white/10 text-white/40 py-4 text-[10px] font-black uppercase tracking-[0.25em] transition-colors hover:text-white/70 hover:border-white/25"
+              style={{ minHeight: 'var(--toque-min)' }}
+            >
+              <ImageIcon size={16} />
+              Escolher do aparelho
             </button>
 
             {fotos.length > 0 && (
