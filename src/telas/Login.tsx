@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { FalhaApi } from '../nucleo/api'
 import { sincronizarFrota } from '../nucleo/frota'
 import { entrar, MARINA, type Sessao } from '../nucleo/sessao'
@@ -20,6 +21,7 @@ export default function Login({ aoEntrar }: { aoEntrar: (s: Sessao) => void }) {
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [entrando, setEntrando] = useState(false)
+  const [mostrarSenha, setMostrarSenha] = useState(false)
 
   async function submeter(e: FormEvent) {
     e.preventDefault()
@@ -80,8 +82,16 @@ export default function Login({ aoEntrar }: { aoEntrar: (s: Sessao) => void }) {
       <div className="w-full max-w-sm md:max-w-md deitado:flex-1 deitado:max-w-md">
         <form onSubmit={submeter} className="space-y-6 md:space-y-8 deitado:space-y-6">
           <div className="group">
+            {/* PROVISORIO ate a E2-a.
+                O cadastro de colaborador (nome, matricula, telefone) e trabalho
+                do repo do Atlas e ainda nao existe, entao NAO HA matricula no
+                banco para ninguem digitar. Ate la o campo aceita os dois, e o
+                rotulo precisa dizer isso: campo que recusa o que o rotulo
+                promete faz quem esta entrando duvidar da propria senha.
+                Quando o cadastro existir, volta a ser so "Matricula" e a dica
+                abaixo sai. */}
             <label htmlFor="matricula" className="rotulo mb-3">
-              Matrícula
+              Matrícula ou e-mail
             </label>
             <input
               id="matricula"
@@ -89,6 +99,7 @@ export default function Login({ aoEntrar }: { aoEntrar: (s: Sessao) => void }) {
               value={matricula}
               onChange={(e) => setMatricula(e.target.value)}
               disabled={entrando}
+              placeholder="seu@email.com"
               // `inputMode` e nao `type=number`: a matricula pode ganhar letra
               // um dia, e teclado numerico e o que importa para o dedo.
               // Enquanto a E2-a nao existe, o campo tambem aceita e-mail.
@@ -104,15 +115,33 @@ export default function Login({ aoEntrar }: { aoEntrar: (s: Sessao) => void }) {
             <label htmlFor="senha" className="rotulo mb-3">
               Senha
             </label>
-            <input
-              id="senha"
-              type="password"
-              className="campo"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              disabled={entrando}
-              autoComplete="current-password"
-            />
+            {/* Ver a senha nao e conforto, e a diferenca entre errar e
+                desistir: com a mao suja, em pe e no sol, digitar errado e a
+                regra — e sem poder conferir, o colaborador culpa a propria
+                memoria e para de tentar. */}
+            <div className="relative">
+              <input
+                id="senha"
+                type={mostrarSenha ? 'text' : 'password'}
+                className="campo pr-16"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                disabled={entrando}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarSenha((v) => !v)}
+                disabled={entrando}
+                aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-pressed={mostrarSenha}
+                // Encostado na borda direita e com a altura toda do campo: o
+                // alvo tem 56px de lado, bem acima dos 44 do dedo.
+                className="absolute right-0 top-0 h-full w-14 flex items-center justify-center text-white/25 hover:text-[#c5a059] focus-visible:text-[#c5a059] transition-colors disabled:opacity-30"
+              >
+                {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           {erro && (

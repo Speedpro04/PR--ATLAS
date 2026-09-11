@@ -95,7 +95,17 @@ export default function EscolherBarco({
             <p className="text-white/40 text-[10px] uppercase tracking-[0.4em] font-black ml-12 leading-relaxed">
               {MARINA}
               <span className="hidden md:inline"> · </span>
-              <span className="block md:inline">Matrícula {sessao.matricula}</span>
+              {/* O tracking de 0.4em cabe numa matricula de quatro digitos, e
+                  estoura com um e-mail: "kd3online@gmail.com" virou tres linhas
+                  no celular. Enquanto o login aceita e-mail (E2-a), o cabecalho
+                  mostra so o que identifica a pessoa — o dominio nao diz nada a
+                  ninguem, e o titulo guarda o valor inteiro. */}
+              <span
+                className="block md:inline tracking-[0.25em] md:tracking-[0.4em]"
+                title={sessao.matricula}
+              >
+                {identificadorCurto(sessao.matricula)}
+              </span>
             </p>
           </div>
 
@@ -193,4 +203,18 @@ export default function EscolherBarco({
       </main>
     </div>
   )
+}
+
+/**
+ * Como o colaborador aparece no cabecalho.
+ *
+ * Matricula sai com rotulo ("Matricula 4471"); e-mail sai so com a parte antes
+ * do @, sem rotulo — "Matricula kd3online@gmail.com" e comprido e errado ao
+ * mesmo tempo, porque e-mail nao e matricula. Provisorio: quando a E2-a criar o
+ * cadastro, so chega matricula aqui.
+ */
+function identificadorCurto(valor: string): string {
+  const v = (valor || '').trim()
+  if (v.includes('@')) return v.split('@')[0]
+  return `Matrícula ${v}`
 }
