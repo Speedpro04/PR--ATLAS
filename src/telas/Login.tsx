@@ -54,28 +54,31 @@ export default function Login({ aoEntrar }: { aoEntrar: (s: Sessao) => void }) {
     // `deitado` = tela larga e baixa (tablet na horizontal, notebook curto). Ali
     // o empilhado nao cabe — sao 52px a mais que a altura util — e a saida e a
     // mesma do Login do Atlas: marca de um lado, formulario do outro.
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 py-12 topo-seguro deitado:flex-row deitado:gap-16 deitado:px-12">
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 py-8 md:py-12 topo-seguro deitado:flex-row deitado:gap-16 deitado:px-12">
       <div className="w-full max-w-sm md:max-w-md deitado:flex-1 deitado:flex deitado:justify-center deitado:max-w-none">
-        <header className="text-center mb-14 deitado:mb-0">
+        {/* Os vaos encolhem no celular e voltam no tablet. Com os espacos de
+            tela grande, a composicao inteira sobe e sobra vazio embaixo do
+            rodape — parece que a tela terminou antes da hora. */}
+        <header className="text-center mb-10 md:mb-14 deitado:mb-0">
           <img
             src="/logo-transparent.png"
             alt=""
             // 223px e o tamanho pedido, mas ele so vale onde ha altura para
             // ele: em tela baixa a logo cede antes do formulario, porque
             // ninguem entra no app pela logo.
-            className="w-[min(223px,26vh)] h-[min(223px,26vh)] mx-auto mb-8 object-contain"
+            className="w-[min(223px,26vh)] h-[min(223px,26vh)] mx-auto mb-5 md:mb-8 object-contain"
           />
           <h1 className="text-3xl md:text-4xl font-serif font-bold text-white">
             Atlas Service
           </h1>
-          <p className="mt-4 text-[10px] uppercase tracking-[0.4em] text-[#c5a059] font-black">
+          <p className="mt-3 md:mt-4 text-[10px] uppercase tracking-[0.4em] text-[#c5a059] font-black">
             {MARINA}
           </p>
         </header>
       </div>
 
       <div className="w-full max-w-sm md:max-w-md deitado:flex-1 deitado:max-w-md">
-        <form onSubmit={submeter} className="space-y-8 deitado:space-y-6">
+        <form onSubmit={submeter} className="space-y-6 md:space-y-8 deitado:space-y-6">
           <div className="group">
             <label htmlFor="matricula" className="rotulo mb-3">
               Matrícula
