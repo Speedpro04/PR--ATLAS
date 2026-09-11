@@ -16,7 +16,14 @@ import { entrar, MARINA, type Sessao } from '../nucleo/sessao'
  * do mesmo jeito: barrar a entrada por causa da lista de barcos seria trocar
  * um problema pequeno por um total.
  */
-export default function Login({ aoEntrar }: { aoEntrar: (s: Sessao) => void }) {
+export default function Login({
+  aoEntrar,
+  expirou = false,
+}: {
+  aoEntrar: (s: Sessao) => void
+  /** Chegou aqui porque o token venceu, nao porque quis sair. */
+  expirou?: boolean
+}) {
   const [matricula, setMatricula] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState<string | null>(null)
@@ -71,7 +78,7 @@ export default function Login({ aoEntrar }: { aoEntrar: (s: Sessao) => void }) {
             className="w-[min(223px,26vh)] h-[min(223px,26vh)] mx-auto mb-5 md:mb-8 object-contain"
           />
           <h1 className="text-3xl md:text-4xl font-serif font-bold text-white">
-            Atlas Service
+            Atlas Pré-Data
           </h1>
           <p className="mt-3 md:mt-4 text-[10px] uppercase tracking-[0.4em] text-[#c5a059] font-black">
             {MARINA}
@@ -143,6 +150,13 @@ export default function Login({ aoEntrar }: { aoEntrar: (s: Sessao) => void }) {
               </button>
             </div>
           </div>
+
+          {expirou && !erro && (
+            <p className="text-[#e5d5b7] text-sm leading-relaxed">
+              Sua sessão expirou. Entre de novo — o que você registrou continua
+              guardado no aparelho.
+            </p>
+          )}
 
           {erro && (
             <p role="alert" className="text-sm text-[#e5d5b7] leading-relaxed">

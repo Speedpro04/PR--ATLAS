@@ -3,17 +3,18 @@ import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Camera, Check, ChevronRight, Cog, Droplets, FileCheck, FileText,
   LifeBuoy, Navigation, Paintbrush, Sailboat, Shield, Ship, Sofa, Trash2,
-  AlertTriangle, Wrench, Zap,
+  AlertTriangle, Upload, Wrench, Zap,
 } from 'lucide-react'
 import { acharBarco, descreverBarco, rotularBarco, tamanhoEmPes, type Barco } from '../nucleo/frota'
 import { identificadorCurto, MARINA, type Sessao } from '../nucleo/sessao'
 import {
   CATEGORIAS, CONDICOES, acharCategoria, apagarFoto, faltaNoRascunho,
-  fotosDoRascunho, guardarFoto, novoRascunho, salvarRascunho,
+  fotosDoRascunho, guardarFoto, lerRascunho, novoRascunho, salvarRascunho,
   type CategoriaChave, type Foto, type Rascunho,
 } from '../nucleo/rascunho'
 import { camposDaCategoria, campoVisivel, type CampoRecorte } from '../nucleo/recorte'
 import { CHAVES_HORIMETRO, CHAVES_OBSERVACAO } from '../nucleo/rascunho'
+import { enviarRascunho, type ResultadoEnvio } from '../nucleo/envio'
 
 const ICONES: Record<string, typeof Wrench> = {
   Wrench, Navigation, Cog, Shield, Zap, LifeBuoy, Droplets, Paintbrush, Sofa,
@@ -45,6 +46,7 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
   const [rascunho, setRascunho] = useState<Rascunho | null>(null)
   const [fotos, setFotos] = useState<Foto[]>([])
   const [salvo, setSalvo] = useState(false)
+  const [envio, setEnvio] = useState<ResultadoEnvio | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const entradaFoto = useRef<HTMLInputElement>(null)
 
@@ -103,10 +105,22 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
     await mudar({ especificos: { ...(rascunho.especificos || {}), [key]: valor } })
   }
 
-  async function salvar() {
+  /**
+   * Guarda e manda para o painel, num toque so.
+   *
+   * Dois botoes — "salvar" e "enviar" — fariam o colaborador escolher entre
+   * duas coisas que, para ele, sao a mesma: terminar. O pre-dado fica no
+   * aparelho de qualquer jeito; o envio e so a travessia.
+   */
+  async function enviar() {
     if (!rascunho) return
     await salvarRascunho(rascunho)
     setSalvo(true)
+    const r = await enviarRascunho(rascunho, sessao.token, setEnvio)
+    if (r.estado === 'enviado') {
+      const atualizado = await lerRascunho(rascunho.id)
+      if (atualizado) setRascunho(atualizado)
+    }
   }
 
   if (barco === undefined) return <div className="min-h-[100dvh]" aria-busy="true" />
@@ -369,15 +383,21 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
               </p>
             )}
             <button
-              onClick={salvar}
-              disabled={falta.length > 0 || salvo}
+              onClick={enviar}
+              disabled={falta.length > 0 || envio?.estado === 'enviando' || envio?.estado === 'enviado'}
               className="btn-primario flex items-center justify-center gap-3"
             >
-              {salvo ? <Check size={16} /> : null}
-              {salvo ? 'Guardado no aparelho' : 'Salvar rascunho'}
+              {envio?.estado === 'enviado' ? <Check size={16} /> : <Upload size={16} />}
+              {rotuloEnvio(envio)}
             </button>
-            <p className="text-center text-[9px] uppercase tracking-widest text-white/20 font-black mt-3">
-              Fica no celular até o escritório revisar
+            <p className="text-center text-[9px] uppercase tracking-widest text-white/20 font-black mt-3 leading-relaxed">
+              {envio?.estado === 'enviado'
+                ? 'O escritório já vê. Continua guardado aqui.'
+                : envio?.erro
+                  ? envio.erro
+                  : salvo
+                    ? 'Guardado no aparelho'
+                    : 'Vai para o painel como pré-dado, não selado'}
             </p>
           </div>
         </div>
@@ -509,4 +529,17 @@ function CampoProprio({
       )}
     </div>
   )
+}
+
+/** O botao conta o que esta acontecendo, inclusive quantas fotos ja subiram. */
+function rotuloEnvio(e: ResultadoEnvio | null): string {
+  if (!e) return 'Enviar para o painel'
+  if (e.estado === 'enviando') {
+    return e.fotosTotal
+      ? `Enviando… ${e.fotosEnviadas}/${e.fotosTotal} fotos`
+      : 'Enviando…'
+  }
+  if (e.estado === 'enviado') return 'Enviado ao painel'
+  if (e.estado === 'falhou') return 'Tentar enviar de novo'
+  return 'Enviar para o painel'
 }

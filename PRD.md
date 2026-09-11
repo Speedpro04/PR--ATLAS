@@ -2,7 +2,7 @@
 
 **Produto:** Yachts Atlas
 **Módulo:** PWA de captação em campo (doca, pátio, oficina)
-**Nome do app:** Atlas Service
+**Nome do app:** Atlas Pré-Data
 **Público:** colaborador de chão da Marina — píer, área seca, galpão
 **Status:** E1 e E2-b implementadas; 3 das 4 decisões fechadas (falta a 3.3)
 **Repositório:** módulo separado, não mistura com `YACTHS-ATLAS-OFICIAL`
@@ -17,7 +17,7 @@ e o que não é registrado não existe no dossiê.
 
 ## 2. O que este módulo é
 
-> **O Atlas Service é a ponte do chão da Marina para o escritório. Só isso.**
+> **O Atlas Pré-Data é a ponte do chão da Marina para o escritório. Só isso.**
 
 Ponte não sela, não analisa, não vira relatório. Ponte leva. Se uma ideia não
 ajuda a travessia do píer até a mesa de quem revisa, ela está fora — e essa
@@ -286,7 +286,7 @@ Obrigatórios que a v1 esqueceu:
 ## 7. Requisitos do PWA
 
 ### Instalável
-`manifest.json` com ícone, nome curto ("Atlas Service"), `display: standalone`,
+`manifest.json` com ícone, nome curto ("Atlas Pré-Data"), `display: standalone`,
 cor da marca. Android (Chrome) e iOS (Safari — Adicionar à Tela de Início).
 
 ### Offline-first
@@ -542,7 +542,7 @@ alteração de schema que este módulo pede.
   obrigatório, mínimo 10 caracteres).
 - Unificar com o fluxo de fotos por WhatsApp/Evolution. Fase futura.
 - Cadastro de embarcação nova pelo celular. O barco vem do painel.
-- **O mar.** O Atlas Service é o chão da Marina: píer, área seca, galpão, barco no
+- **O mar.** O Atlas Pré-Data é o chão da Marina: píer, área seca, galpão, barco no
   berço. Registro em navegação — uma foto e uma observação ditada, longe de
   qualquer rede — foi levantado em 10/09/2026 e **cortado de propósito**. Dois
   modos de uso dobram o app para atender a exceção, e o modo mais fácil vira o
@@ -579,7 +579,7 @@ Marina, muda o `created_by`, muda o RLS e muda o valor probatório do registro.
 ### E1 — Esqueleto do PWA instalável
 
 - Projeto Vite + React 18 + TypeScript (mesma base do Atlas, sem Next).
-- `manifest.json`: nome "Atlas Service", `display: standalone`, `theme_color`
+- `manifest.json`: nome "Atlas Pré-Data", `display: standalone`, `theme_color`
   `#010c20`, ícones 192/512 a partir do `favicon-v2.png`.
 - Service worker cacheando o shell (HTML/CSS/JS/fontes). Estratégia: shell em
   cache-first, dados nunca.
@@ -765,7 +765,7 @@ alteração de schema do projeto. Não é — a da E2-a vem antes e é maior.
 
 - **10/09/2026** — v3. O usuário deixa de ser "o funcionário" genérico e vira o
   **colaborador de chão**. Fixa a definição do produto (**ponte** do chão para o
-  escritório) e o nome (**Atlas Service**). Fecha 3.1, 3.2 e 3.4. Divide a ficha
+  escritório) e o nome (**Atlas Pré-Data**). Fecha 3.1, 3.2 e 3.4. Divide a ficha
   entre o barco e a gaveta. Descobre que o offline é a borda do wi-fi da marina,
   não o alto-mar — e corta o mar do escopo.
 - **10/09/2026** — v2. Reescrita sobre o sistema real depois de levantamento no

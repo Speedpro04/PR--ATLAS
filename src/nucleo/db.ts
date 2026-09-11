@@ -1,5 +1,5 @@
 /**
- * IndexedDB do Atlas Service.
+ * IndexedDB do Atlas Pré-Data.
  *
  * Sem biblioteca de proposito. `idb` e `dexie` custam 5-15 kB no bundle de um
  * app que abre no pier, e o que precisamos daqui e pequeno: guardar a frota e,
@@ -14,8 +14,18 @@
  * colaborador esta no pier e nao tem como resolver isso.
  */
 
-const BANCO = 'atlas-service'
+const BANCO = 'atlas-pre-data'
 const VERSAO = 2
+
+/**
+ * Nomes que este banco ja teve.
+ *
+ * O app trocou de nome duas vezes em dois dias (Campo -> Service -> Pre-Data), e
+ * cada troca renomeou o IndexedDB junto — quem tinha rascunho guardado abria o
+ * app no dia seguinte com o aparelho vazio, sem erro nenhum na tela. Renomear
+ * produto nao pode apagar o trabalho de quem estava no pier.
+ */
+const BANCOS_ANTIGOS = ['atlas-service', 'atlas-campo']
 
 /** Barcos baixados do Atlas. Chave: o id do ativo (YA-IATE-2022-A7F3). */
 export const LOJA_FROTA = 'frota'
@@ -198,6 +208,51 @@ export async function gravarMeta(chave: string, valor: unknown): Promise<void> {
   } catch {
     /* sem espaco ou sem banco: o app segue, so nao lembra */
   }
+}
+
+/**
+ * Traz o conteudo de um banco de nome antigo, uma vez so.
+ *
+ * Roda em silencio e nunca derruba o app: se nao houver banco antigo, se ele
+ * estiver vazio ou se o navegador recusar, o app segue com o que tem.
+ */
+export async function migrarBancosAntigos(): Promise<number> {
+  let trazidos = 0
+  for (const nome of BANCOS_ANTIGOS) {
+    try {
+      const antigo = await new Promise<IDBDatabase | null>((ok) => {
+        // Sem versao: abre como esta. Se o banco nao existe, o navegador cria
+        // um vazio — por isso a checagem de objectStoreNames logo abaixo.
+        const q = indexedDB.open(nome)
+        q.onsuccess = () => ok(q.result)
+        q.onerror = () => ok(null)
+        q.onblocked = () => ok(null)
+      })
+      if (!antigo) continue
+
+      for (const loja of [LOJA_FROTA, LOJA_RASCUNHOS, LOJA_FOTOS]) {
+        if (!antigo.objectStoreNames.contains(loja)) continue
+        const itens = await new Promise<any[]>((ok) => {
+          try {
+            const p = antigo.transaction(loja, 'readonly').objectStore(loja).getAll()
+            p.onsuccess = () => ok(p.result ?? [])
+            p.onerror = () => ok([])
+          } catch {
+            ok([])
+          }
+        })
+        for (const item of itens) {
+          if (await gravar(loja, item)) trazidos += 1
+        }
+      }
+      antigo.close()
+      // Nao apaga o banco antigo: se a migracao tiver falhado pela metade, o
+      // original ainda e a copia boa.
+    } catch {
+      /* banco antigo inacessivel: segue sem ele */
+    }
+  }
+  return trazidos
 }
 
 /** Apaga o que e do colaborador. Chamado ao sair. */

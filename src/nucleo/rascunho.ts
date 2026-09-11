@@ -86,6 +86,8 @@ export const CONDICOES: Array<{ valor: Condicao; rotulo: string; ajuda: string }
 export type Foto = {
   id: string
   rascunhoId: string
+  /** Ja subiu? Evita reenviar imagem de 4 MB numa segunda tentativa. */
+  enviada?: boolean
   /**
    * O arquivo como saiu da camera, SEM comprimir.
    *
@@ -134,6 +136,10 @@ export type Rascunho = {
    * mapa de-para entre o app e o painel seria mais um lugar para divergir.
    */
   especificos: Record<string, string>
+  /** Id no Atlas depois que subiu. Enquanto for vazio, ainda nao foi. */
+  remotoId?: string
+  /** ISO do envio bem-sucedido. */
+  enviadoEm?: string
 }
 
 function novoId(): string {

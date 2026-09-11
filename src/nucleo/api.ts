@@ -50,6 +50,31 @@ export class FalhaApi extends Error {
   }
 }
 
+/**
+ * Tira os cabecalhos marcados como `undefined`.
+ *
+ * E como o upload pede para o navegador escolher o Content-Type: o FormData
+ * precisa por o proprio, com o boundary, e um 'application/json' fixo aqui
+ * faria o servidor recusar o arquivo.
+ */
+function limparCabecalhos(h: Record<string, string | undefined>): Record<string, string> {
+  const saida: Record<string, string> = {}
+  for (const [k, v] of Object.entries(h)) if (v !== undefined) saida[k] = v
+  return saida
+}
+
+/**
+ * Quem quer saber que a sessao caiu.
+ *
+ * Um so ouvinte, registrado pelo App. Tratar 401 em cada tela daria quatro
+ * lugares para esquecer um.
+ */
+let ouvinteSessao: (() => void) | null = null
+
+export function aoCairSessao(f: () => void): void {
+  ouvinteSessao = f
+}
+
 async function chamar(
   caminho: string,
   opcoes: RequestInit & { prazo?: number; token?: string } = {},
@@ -64,11 +89,11 @@ async function chamar(
     resposta = await fetch(`${BASE}${caminho}`, {
       ...resto,
       signal: abortador.signal,
-      headers: {
+      headers: limparCabecalhos({
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...headers,
-      },
+        ...(headers as Record<string, string | undefined>),
+      }),
     })
   } catch {
     // AbortError e falha de rede caem no mesmo lugar de proposito: para quem
@@ -92,6 +117,10 @@ async function chamar(
   const detalhe = await extrairDetalhe(resposta)
 
   if (resposta.status === 401) {
+    // Avisa o App para derrubar ao login. So no 401 de uma chamada AUTENTICADA:
+    // o 401 do proprio /auth/login e senha errada, e virou 'credenciais' antes
+    // de chegar aqui.
+    if (token) ouvinteSessao?.()
     throw new FalhaApi('sessao', detalhe || 'Sessão expirada.', 401)
   }
   if (resposta.status === 402) {
@@ -155,4 +184,66 @@ export async function entrar(email: string, senha: string): Promise<RespostaLogi
 export async function listarAtivos(token: string): Promise<any[]> {
   const dados = await chamar('/ativos', { token })
   return Array.isArray(dados) ? dados : []
+}
+
+/** Prazo do envio: mais folgado que a leitura, porque foto demora a subir. */
+const PRAZO_ENVIO = 45000
+
+/**
+ * Cria o rascunho no Atlas (`registros_rascunho`).
+ *
+ * Devolve a linha criada, com o `id` do lado de la — e ele que permite reenviar
+ * as fotos sem criar um segundo rascunho quando a primeira tentativa cai no
+ * meio.
+ */
+export async function criarRascunhoRemoto(
+  token: string,
+  corpo: {
+    ativo_id: string
+    categoria: string
+    titulo?: string
+    observacao?: string
+    dados: Record<string, unknown>
+    status?: string
+  },
+): Promise<any> {
+  return chamar('/registros/rascunho', {
+    method: 'POST',
+    body: JSON.stringify(corpo),
+    token,
+    prazo: PRAZO_ENVIO,
+  })
+}
+
+/**
+ * Sobe uma foto por `POST /documentos/upload/{ativo}`.
+ *
+ * O arquivo vai COMO SAIU DA CAMERA. O servidor calcula o SHA-256 sobre os
+ * bytes recebidos, entao comprimir aqui mudaria a prova — e a decisao 3.3 do
+ * PRD (qual byte e a prova) se resolve por nao mexer no arquivo.
+ *
+ * `FormData` manda o proprio Content-Type com o boundary; forcar
+ * application/json aqui quebraria o upload, e por isso o header e removido.
+ */
+export async function enviarFoto(
+  token: string,
+  ativoId: string,
+  arquivo: Blob,
+  nome: string,
+  meta: { tipo: string; categoria: string; descricao?: string },
+): Promise<any> {
+  const corpo = new FormData()
+  corpo.append('file', arquivo, nome)
+
+  const busca = new URLSearchParams({ tipo: meta.tipo, categoria: meta.categoria })
+  if (meta.descricao) busca.set('descricao', meta.descricao)
+
+  return chamar(`/documentos/upload/${encodeURIComponent(ativoId)}?${busca}`, {
+    method: 'POST',
+    body: corpo,
+    token,
+    prazo: PRAZO_ENVIO,
+    // undefined remove o Content-Type padrao e deixa o navegador por o dele.
+    headers: { 'Content-Type': undefined as unknown as string },
+  })
 }

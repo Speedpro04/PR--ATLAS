@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon-v2.png', 'logo-transparent.png'],
       manifest: {
-        name: 'Atlas Service',
-        short_name: 'Atlas Service',
+        name: 'Atlas Pré-Data',
+        short_name: 'Atlas Pré-Data',
         description: 'A ponte do chao da Marina para o escritorio',
         lang: 'pt-BR',
         start_url: '/',

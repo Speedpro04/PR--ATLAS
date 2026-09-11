@@ -1,9 +1,9 @@
 {
-  "name": "atlas-service",
+  "name": "atlas-pre-data",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Atlas Service — a ponte do chao da Marina para o escritorio",
+  "description": "Atlas Pré-Data — a ponte do chao da Marina para o escritorio",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

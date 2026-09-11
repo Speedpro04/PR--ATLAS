@@ -17,7 +17,9 @@
 import { entrar as apiEntrar } from './api'
 import { limparTudo } from './db'
 
-const CHAVE = 'atlas-service:sessao'
+const CHAVE = 'atlas-pre-data:sessao'
+/** Chaves antigas: o app trocou de nome duas vezes. Ver db.ts. */
+const CHAVES_ANTIGAS = ['atlas-service:sessao', 'atlas-campo:sessao']
 const SETE_DIAS = 7 * 24 * 60 * 60 * 1000
 
 /**
@@ -63,7 +65,19 @@ export function identificadorParaEmail(entrada: string): string {
 
 export function sessaoAtual(): Sessao | null {
   try {
-    const cru = localStorage.getItem(CHAVE)
+    let cru = localStorage.getItem(CHAVE)
+    // Renome do produto nao pode pedir login de novo.
+    if (!cru) {
+      for (const antiga of CHAVES_ANTIGAS) {
+        const v = localStorage.getItem(antiga)
+        if (v) {
+          localStorage.setItem(CHAVE, v)
+          localStorage.removeItem(antiga)
+          cru = v
+          break
+        }
+      }
+    }
     if (!cru) return null
     const s = JSON.parse(cru) as Sessao
     // Guarda contra formato antigo: uma sessao gravada por uma versao anterior

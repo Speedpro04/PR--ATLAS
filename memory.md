@@ -31,21 +31,28 @@ controlada: o dedo ganha padding, a marca mantém a fonte.
 
 ## O que ele é, em uma frase
 
-> **O Atlas Service é a ponte do chão da Marina para o escritório. Só isso.**
+> **O Atlas Pré-Data é a ponte do chão da Marina para o escritório. Só isso.**
 
 Frase do Marcos, 10/09/2026, depois de duas horas de conversa em que a ideia
 inchou três vezes. É **critério de corte**, não slogan: ponte não sela, não
 analisa, não vira relatório. Se algo não ajuda a travessia do píer até a mesa de
 quem revisa, está fora.
 
-O nome do app é **Atlas Service**. Levou seis tentativas em 10/09/2026 —
-Campo, Pátio, Oficina, Operações, Dock, Garage — e o critério que fechou foi:
-**nome de lugar exclui lugares**. O serviço acontece no berço com o barco na
-água, no pátio no seco, na oficina e no galpão; qualquer lugar escolhido deixa
-os outros de fora, e quem está no píer olha o ícone "Oficina" e pensa que não é
-para ele. "Service" nomeia o que se faz, não onde — e é o próprio objeto do app,
-o registro de serviço. O inglês não destoa: o painel já diz Fleet Excellence e
-Premium Vault Access. Cabe sob o ícone em 13 caracteres.
+O nome do app é **Atlas Pré-Data**, batizado em 11/09/2026. Antes disso foram
+sete tentativas — Campo, Pátio, Oficina, Operações, Dock, Garage, Service.
+
+O critério que derrubou os seis primeiros: **nome de lugar exclui lugares**. O
+serviço acontece no berço com o barco na água, no pátio no seco, na oficina e no
+galpão; quem está no píer olha um ícone "Oficina" e pensa que não é para ele.
+
+O que "Pré-Data" acrescenta e os outros não tinham: ele nomeia **o que o app
+produz**, não o que se faz nem onde. O que sai daqui é pré-dado — matéria-prima
+crua que o escritório trata e sela. É a mesma ideia da ponte, agora no nome.
+
+CUIDADO: cada renome trocou o nome do IndexedDB e da chave de sessão, e as duas
+primeiras vezes apagaram o aparelho de quem já usava, sem erro na tela. Existe
+migração em `db.ts` (BANCOS_ANTIGOS) e em `sessao.ts` (CHAVES_ANTIGAS). Se houver
+um oitavo nome, acrescente o antigo nas duas listas ANTES de commitar.
 
 ---
 
@@ -211,7 +218,7 @@ matrícula repete entre Marinas, então o aparelho precisa mesmo saber de qual
 ele é — mas resolver isso com uma tela na frente do login põe um passo a mais
 no caminho de quem só quer registrar um serviço, e o Marcos esbarrou nela no
 primeiro teste. O vínculo volta na E2, pelo cadastro. Vale como regra:
-**o Atlas Service é ponte, e ponte não cobra pedágio na entrada.**
+**o Atlas Pré-Data é ponte, e ponte não cobra pedágio na entrada.**
 
 **E o cabeçalho do fichário vem preenchido** — quem fez, matrícula, dia, hora,
 barco. Nada disso é digitado: o app já sabe, e é justamente o que ninguém
