@@ -4,7 +4,7 @@
 **Módulo:** PWA de captação em campo (doca, pátio, oficina)
 **Nome do app:** Atlas Pré-Data
 **Público:** colaborador de chão da Marina — píer, área seca, galpão
-**Status:** E1 e E2-b implementadas; 3 das 4 decisões fechadas (falta a 3.3)
+**Status:** E1, E2-b, E3 e E4 implementadas e provadas em uso · as 4 decisões fechadas
 **Repositório:** módulo separado, não mistura com `YACTHS-ATLAS-OFICIAL`
 
 ---
@@ -90,17 +90,22 @@ O trabalho foi feito; cobrança é outra conversa. Perder registro por causa de
 boleto destrói a confiança no app — e o colaborador veria "erro ao enviar" sem
 ter como entender o motivo, porque a dívida não é da conta dele.
 
-### 3.3 Qual byte é a prova · ABERTA
+### 3.3 Qual byte é a prova · RESOLVIDA 11/09/2026
 
-O PWA precisa comprimir foto no celular (dados e espaço). Mas o produto usa
-**SHA-256 como prova de integridade**.
+**O hash é do arquivo original da câmera.** A foto sobe sem compressão.
 
-- O hash é do arquivo **original da câmera** ou do **comprimido que sobe**?
+A decisão se resolveu ao olhar o código em vez de debater: o
+`POST /documentos/upload/{ativo}` do Atlas **calcula o SHA-256 no servidor**,
+sobre os bytes que chegam (`s3_service.calculate_hash`). Quem define qual byte
+é a prova, portanto, é quem envia — e não mexer no arquivo faz a prova ser o
+que a câmera produziu.
 
-Precisa estar escrito. Se ficar implícito, alguém ajusta a compressão um dia e
-quebra a cadeia de custódia sem ninguém perceber.
+O custo é dado móvel: foto de celular tem 2-5 MB. É aceitável porque a
+sincronização acontece no wi-fi da Marina (3.1), não no 4G do píer.
 
-**Não bloqueia E1 nem E2.** Só aparece na E3, quando a foto entra.
+**Se um dia a compressão entrar**, ela muda a prova sem avisar ninguém — e aí
+tem de ser decisão escrita, não otimização. Está registrado em
+`nucleo/api.ts`, na função que envia.
 
 ### 3.4 Quem é o funcionário · DECIDIDA 10/09/2026
 
@@ -671,7 +676,26 @@ devolve a frota da Marina dele — e só dela — e o token renova sem pedir sen
 
 ---
 
-### E3 — Captura do registro
+### E3 — Captura do registro · FEITA 11/09/2026
+
+**Como o recorte foi feito, e por que ele é o coração da entrega.** As 13 fichas
+do Atlas somam 292 campos e 134 obrigatórios. Cada campo foi classificado pelo
+critério da seção 2 (fica no barco só o que some se ninguém registrar na hora) e
+depois **atacado por um verificador adversarial** com uma tarefa só: derrubar o
+que conseguisse. Onde ele passou, cortou fundo:
+
+| ficha | classificado | depois do cético |
+|---|---|---|
+| motor | 10 | **3** |
+| manutenção | 23 | **13** |
+| ida ao mar | 17 | **11** |
+| seguro | 2 | **0** — apólice e vigência moram todas na gaveta |
+
+**Nove das treze não chegaram a ser verificadas** (a sessão acabou no meio) e o
+número delas está inflado — elétrica com 25, sinistros com 22. Estão marcadas
+`verificado: false` em `src/fichas/recorte.json` e seguem no formulário curto:
+usá-las como estão colocaria no píer justamente o formulário que este recorte
+existe para evitar. **Rodar esses nove verificadores é trabalho pendente.**
 
 - Campos vindos do `servicosCategorias.ts` do Atlas. Extração no **build**
   (esbuild → JSON), não cópia manual. As 13 fichas.
@@ -684,12 +708,52 @@ devolve a frota da Marina dele — e só dela — e o token renova sem pedir sen
 - Horímetro obrigatório e em destaque.
 - Rótulo 10px / valor 16px; alvo de toque 44px.
 
-**Pronto quando:** um registro completo de troca de óleo, com quatro fotos, é
-criado em modo avião e fica salvo depois de fechar e reabrir o app.
+**Feito, com estas decisões de tela:** `select` virou botão (roleta de
+`<select>` no celular exige mirar, rolar e confirmar — três gestos com a mão
+suja para responder "sim"); campo com `showIf` só aparece quando o pai responde,
+o que faz treze campos caberem no píer; horímetro e observação genéricos somem
+quando a categoria traz os seus.
+
+**Foto:** dois botões, e a tela lê o aparelho. `capture="environment"` só vale
+em celular — no desktop o navegador ignora o atributo e os dois botões abriam a
+mesma janela. Com toque e ponteiro grosso: câmera em primeiro, "já tenho a foto"
+embaixo. No computador: um botão só, e uma linha dizendo que no celular ele abre
+a câmera.
+
+**Falta provar em modo avião, no celular de verdade.**
 
 ---
 
-### E4 — Fila e sincronização
+### E4 — Envio · FEITO 11/09/2026 (a fila automática ainda não)
+
+**Não precisou de backend novo** — a descoberta que mudou o tamanho da entrega.
+Os dois endpoints já existiam no Atlas: `POST /registros/rascunho` recebe o
+texto num `dados` jsonb livre, e `POST /documentos/upload/{ativo}` recebe a foto
+e calcula o hash.
+
+**Provado em uso em 11/09/2026**, com o Marcos registrando de verdade:
+
+```
+registros_rascunho   YA-IATE-2022-A7F3 · manutencao
+                     "Troca de mandueiras de arreficimento"
+                     dados: troca_arrefecimento "Sim" · condicao "concluido"
+                            origem "atlas-pre-data" · client_id · capturado_em
+documentos           MOTOR-04.jfif · 51 KB · tipo "foto" · status verified
+                     hash 79dcb332… (SHA-256 do servidor)
+                     descricao "Atlas Pré-Data · Manutenção · e2e02363…"
+```
+
+O `client_id` na descrição da foto é o que amarra imagem e pré-dado, já que o
+upload de documento não conhece rascunho.
+
+**Quem fez vai junto, e são dois nomes:** `registrado_por` (quem estava com o
+aparelho, vindo do `/auth/me`) e `executado_por` (quem meteu a mão). Na marina o
+mecânico faz e às vezes outra pessoa lança — e para o escritório essas duas
+respostas não são intercambiáveis.
+
+**O que ainda falta desta entrega:** a fila automática. Hoje o envio é por toque
+no botão; Background Sync, retentativa com espera crescente e subida sozinha ao
+voltar o sinal continuam por fazer.
 
 - IndexedDB com os pendentes: registro + Blobs das fotos.
 - `client_id` (UUID do aparelho) em cada registro, para reenvio não duplicar.
@@ -718,7 +782,19 @@ chega marcado.
 
 ---
 
-### E6 — Painel de revisão · *no repo do Atlas*
+### E6 — Painel de revisão · *no repo do Atlas* · **É O QUE FALTA AGORA**
+
+**Sem ela, metade do sistema não existe.** O pré-dado chega incompleto DE
+PROPÓSITO, contando que o escritório complete — mas a tela onde ele completa
+ainda não foi feita. Hoje o dado cai em `registros_rascunho` e fica invisível:
+ninguém no painel vê, ninguém completa, ninguém sela.
+
+O recorte da E3 só se justifica depois que esta aba existir. Enquanto não
+existir, o que a Marina tem é um app que engole informação.
+
+Esta aba é também onde os ~30 campos da gaveta aparecem para preencher: valor,
+nota fiscal, CNPJ do prestador, part number, marca e viscosidade do óleo. Quem
+tem o papel na mão é quem os preenche.
 
 - Lista de rascunhos pendentes, mais antigos primeiro, com destaque para os
   marcados como possível duplicata.

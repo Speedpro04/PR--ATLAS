@@ -56,7 +56,66 @@ um oitavo nome, acrescente o antigo nas duas listas ANTES de commitar.
 
 ---
 
-## Estado em 10/09/2026
+## Estado em 11/09/2026
+
+**E1, E2-b, E3 e E4 feitas — e a E4 foi provada em uso**, com o Marcos
+registrando um serviço de verdade no Aurora Austral e o pré-dado chegando ao
+banco com a foto amarrada pelo `client_id`. As quatro decisões da seção 3 do PRD
+estão fechadas.
+
+**A 3.3 se resolveu olhando o código, não debatendo:** o
+`POST /documentos/upload` do Atlas calcula o SHA-256 no servidor, sobre os bytes
+recebidos. Logo, a prova é o byte que sobe — e a foto sobe sem compressão, o que
+faz a prova ser o que a câmera produziu.
+
+**A E4 não precisou de backend novo.** Os dois endpoints já existiam. Essa
+descoberta encurtou a entrega em dias, e veio de ler o código do Atlas antes de
+propor qualquer coisa — vale repetir o hábito.
+
+**O QUE FALTA E É CRÍTICO: a aba de revisão no painel (E6).** O pré-dado chega
+incompleto de propósito, contando que o escritório complete — mas a tela onde
+ele completa não existe. Hoje o dado cai em `registros_rascunho` e fica
+invisível. Enquanto a aba não existir, a Marina tem um app que engole
+informação, e o recorte da E3 não se justifica.
+
+**Pendência da E3:** nove das treze categorias não passaram pelo verificador
+adversarial e estão infladas (elétrica 25 campos, sinistros 22). Marcadas
+`verificado: false` no `recorte.json`, seguem no formulário curto.
+
+**Pendência da E4:** a fila automática. O envio hoje é por toque; Background
+Sync e retentativa continuam por fazer.
+
+---
+
+## O que o uso real revelou em 11/09/2026
+
+Quatro defeitos que nenhuma revisão de código tinha pegado, todos encontrados
+com o Marcos usando o app:
+
+**Sair apagava tudo em silêncio.** O botão é um ícone no canto onde o polegar
+passa, não perguntava nada, e `encerrarSessao` limpa frota E rascunhos — um
+toque errado custava a manhã de quem estava no píer. Agora pergunta e conta
+quantos registros morreriam.
+
+**A tela não retomava o registro aberto.** O rascunho é gravado a cada tecla,
+mas a tela vivia só na memória: celular bloqueou ou a página recarregou, e o
+colaborador voltava à escolha de categoria achando que perdeu tudo, com o texto
+inteiro guardado e invisível.
+
+**Token vencido deixava o app de pé com sessão morta.** Toda chamada voltava
+401, a frota aparecia vazia, e a pessoa lia "nenhum ativo no aparelho" sem pista
+do motivo. Agora cai no login explicando — e o aviso sobrevive ao F5.
+
+**Os dois botões de foto faziam a mesma coisa no desktop.** `capture` só vale em
+celular; no Windows o navegador ignora o atributo. Não era bug de código: a tela
+prometia o que o aparelho não tem.
+
+A lição das quatro: **nenhuma aparece em teste automatizado nem em leitura de
+código.** Aparecem quando alguém usa. Priorize colocar na mão do Marcos cedo.
+
+---
+
+## Estado em 10/09/2026 (histórico)
 
 **E1 feita** — esqueleto do PWA instalável, e o visual das três telas de pé com
 dados de exemplo. Vite 5 + React 18 + TypeScript nas mesmas versões do Atlas,

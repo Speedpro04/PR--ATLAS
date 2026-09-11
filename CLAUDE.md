@@ -8,7 +8,14 @@ não está no código.
 PWA de captação em campo para o funcionário da Marina registrar **serviço** no
 barco, offline, e sincronizar depois. Módulo **separado** do Yachts Atlas.
 
-**Estado: E1 feita, E2-b em andamento.** Detalhe em `memory.md`.
+**Estado: E1, E2-b, E3 e E4 feitas** — a E4 provada em uso, com pré-dado e foto
+chegando ao banco. As 4 decisões da seção 3 estão fechadas. Detalhe em
+`memory.md`.
+
+**O que falta e é crítico: a aba de revisão no painel (E6), no repo do Atlas.**
+O pré-dado chega incompleto de propósito contando que o escritório complete, e a
+tela onde ele completa não existe — hoje o dado cai em `registros_rascunho` e
+fica invisível. Sem ela, a Marina tem um app que engole informação.
 
 O serviço está detalhado na **seção 12 do PRD**: as entregas em ordem, cada uma
 com o que inclui e como se sabe que terminou. Siga aquela ordem.
