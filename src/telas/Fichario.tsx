@@ -12,6 +12,8 @@ import {
   fotosDoRascunho, guardarFoto, novoRascunho, salvarRascunho,
   type CategoriaChave, type Foto, type Rascunho,
 } from '../nucleo/rascunho'
+import { camposDaCategoria, campoVisivel, type CampoRecorte } from '../nucleo/recorte'
+import { CHAVES_HORIMETRO, CHAVES_OBSERVACAO } from '../nucleo/rascunho'
 
 const ICONES: Record<string, typeof Wrench> = {
   Wrench, Navigation, Cog, Shield, Zap, LifeBuoy, Droplets, Paintbrush, Sofa,
@@ -96,6 +98,11 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
     setRascunho((r) => (r ? { ...r, fotos: lista.length } : r))
   }
 
+  async function mudarEspecifico(key: string, valor: string) {
+    if (!rascunho) return
+    await mudar({ especificos: { ...(rascunho.especificos || {}), [key]: valor } })
+  }
+
   async function salvar() {
     if (!rascunho) return
     await salvarRascunho(rascunho)
@@ -121,6 +128,12 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
 
   const categoria = rascunho ? acharCategoria(rascunho.categoria) : undefined
   const falta = rascunho ? faltaNoRascunho(rascunho) : []
+  const proprios = rascunho ? camposDaCategoria(rascunho.categoria) : []
+  // A categoria trouxe o seu proprio horimetro/observacao? Entao o generico
+  // sai: dois campos pedindo a mesma coisa fazem quem preenche escolher um e
+  // deixar o outro vazio — e o escritorio recebe metade da leitura.
+  const temHorimetroProprio = proprios.some((c) => CHAVES_HORIMETRO.includes(c.key))
+  const temObsPropria = proprios.some((c) => CHAVES_OBSERVACAO.includes(c.key))
 
   return (
     <div className="min-h-[100dvh] p-4 md:p-8 pb-40 topo-seguro">
@@ -252,21 +265,38 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
               />
             </div>
 
-            <div>
-              <label htmlFor="horimetro" className="rotulo mb-3">
-                Horímetro
-              </label>
-              <input
-                id="horimetro"
-                className="campo"
-                value={rascunho.horimetro}
-                onChange={(e) => mudar({ horimetro: e.target.value })}
-                placeholder="Leitura de agora"
-                // decimal e nao numeric: horimetro tem virgula, e o teclado
-                // numerico puro esconde a tecla dela em boa parte dos Android.
-                inputMode="decimal"
-              />
-            </div>
+            {/* Campos proprios da categoria. So aparecem nas que passaram pelo
+                verificador adversarial — ver nucleo/recorte.ts. Nas demais a
+                lista vem vazia e sobra o formulario curto, que serve para
+                qualquer servico. */}
+            {proprios.map((campo) =>
+              campoVisivel(campo, rascunho.especificos || {}) ? (
+                <CampoProprio
+                  key={campo.key}
+                  campo={campo}
+                  valor={(rascunho.especificos || {})[campo.key] ?? ''}
+                  aoMudar={(v) => mudarEspecifico(campo.key, v)}
+                />
+              ) : null,
+            )}
+
+            {!temHorimetroProprio && (
+              <div>
+                <label htmlFor="horimetro" className="rotulo mb-3">
+                  Horímetro
+                </label>
+                <input
+                  id="horimetro"
+                  className="campo"
+                  value={rascunho.horimetro}
+                  onChange={(e) => mudar({ horimetro: e.target.value })}
+                  placeholder="Leitura de agora"
+                  // decimal e nao numeric: horimetro tem virgula, e o teclado
+                  // numerico puro esconde a tecla dela em boa parte dos Android.
+                  inputMode="decimal"
+                />
+              </div>
+            )}
 
             <div>
               <span className="rotulo mb-3 block">Como ficou</span>
@@ -295,19 +325,21 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
               </p>
             </div>
 
-            <div>
-              <label htmlFor="obs" className="rotulo mb-3">
-                Observação
-              </label>
-              <textarea
-                id="obs"
-                rows={4}
-                className="campo resize-none"
-                value={rascunho.observacao}
-                onChange={(e) => mudar({ observacao: e.target.value })}
-                placeholder="O que o escritório precisa saber e não está na foto"
-              />
-            </div>
+            {!temObsPropria && (
+              <div>
+                <label htmlFor="obs" className="rotulo mb-3">
+                  Observação
+                </label>
+                <textarea
+                  id="obs"
+                  rows={4}
+                  className="campo resize-none"
+                  value={rascunho.observacao}
+                  onChange={(e) => mudar({ observacao: e.target.value })}
+                  placeholder="O que o escritório precisa saber e não está na foto"
+                />
+              </div>
+            )}
 
             {/* O que o app ja sabe, pequeno: e conferencia, nao trabalho. */}
             <p className="text-[9px] text-white/30 uppercase tracking-widest leading-relaxed border-t border-white/5 pt-5">
@@ -373,6 +405,108 @@ function Miniatura({ foto }: { foto: Foto }) {
   return (
     <div className="aspect-square rounded-sm overflow-hidden bg-white/[0.03] border border-white/5">
       {url && <img src={url} alt="" className="w-full h-full object-cover" />}
+    </div>
+  )
+}
+
+/**
+ * Um campo proprio da categoria.
+ *
+ * `select` vira BOTAO, nao lista suspensa: "Houve troca de oleo? Sim/Nao" com
+ * dois alvos de dedo resolve num toque, enquanto um <select> no celular abre
+ * uma roleta que exige mirar, rolar e confirmar — tres gestos com a mao suja
+ * para responder sim.
+ */
+function CampoProprio({
+  campo,
+  valor,
+  aoMudar,
+}: {
+  campo: CampoRecorte
+  valor: string
+  aoMudar: (v: string) => void
+}) {
+  const opcoes = campo.options ?? []
+  const curtas = opcoes.length > 0 && opcoes.every((o) => o.length <= 14)
+
+  if (opcoes.length && curtas) {
+    return (
+      <div>
+        <span className="rotulo mb-3 block">{campo.label}</span>
+        <div className="flex flex-wrap gap-2">
+          {opcoes.map((o) => {
+            const ativa = valor === o
+            return (
+              <button
+                key={o}
+                onClick={() => aoMudar(ativa ? '' : o)}
+                aria-pressed={ativa}
+                className={`rounded-sm border px-5 text-[10px] font-black uppercase tracking-[0.15em] transition-colors ${
+                  ativa
+                    ? 'bg-[#c5a059] text-[#010c20] border-[#c5a059]'
+                    : 'border-white/10 text-white/40 hover:border-white/25'
+                }`}
+                style={{ minHeight: 'var(--toque-min)' }}
+              >
+                {o}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  // Opcao longa demais para caber num botao volta a ser lista.
+  if (opcoes.length) {
+    return (
+      <div className="group">
+        <label htmlFor={campo.key} className="rotulo mb-3">
+          {campo.label}
+        </label>
+        <select
+          id={campo.key}
+          className="campo"
+          value={valor}
+          onChange={(e) => aoMudar(e.target.value)}
+        >
+          <option value="">—</option>
+          {opcoes.map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
+        </select>
+      </div>
+    )
+  }
+
+  return (
+    <div className="group">
+      <label htmlFor={campo.key} className="rotulo mb-3">
+        {campo.label}
+        {campo.suffix ? ` (${campo.suffix})` : ''}
+      </label>
+      {campo.type === 'textarea' ? (
+        <textarea
+          id={campo.key}
+          rows={4}
+          className="campo resize-none"
+          value={valor}
+          onChange={(e) => aoMudar(e.target.value)}
+          placeholder={campo.placeholder ?? undefined}
+        />
+      ) : (
+      <input
+        id={campo.key}
+        className="campo"
+        type={campo.type === 'date' ? 'date' : campo.type === 'time' ? 'time' : 'text'}
+        inputMode={campo.type === 'number' ? 'decimal' : undefined}
+        value={valor}
+        onChange={(e) => aoMudar(e.target.value)}
+        placeholder={campo.placeholder ?? undefined}
+      />
+      )}
     </div>
   )
 }

@@ -126,6 +126,14 @@ export type Rascunho = {
   clientId: string
   /** Contagem de fotos, para a lista nao precisar carregar Blob nenhum. */
   fotos: number
+  /**
+   * Campos proprios da categoria (ver `nucleo/recorte.ts`).
+   *
+   * Guardados por chave do Atlas — `troca_oleo`, `horimetro_saida`, `condutor` —
+   * para a E4 mandar direto para o `dados` jsonb do registro, sem traduzir. Um
+   * mapa de-para entre o app e o painel seria mais um lugar para divergir.
+   */
+  especificos: Record<string, string>
 }
 
 function novoId(): string {
@@ -157,6 +165,7 @@ export function novoRascunho(
     abertoEm: agora,
     atualizadoEm: agora,
     fotos: 0,
+    especificos: {},
   }
 }
 
@@ -226,7 +235,26 @@ export async function apagarFoto(foto: Foto): Promise<void> {
 export function faltaNoRascunho(r: Rascunho): string[] {
   const falta: string[] = []
   if (!r.servico.trim()) falta.push('o que foi feito')
-  if (!r.horimetro.trim()) falta.push('horímetro')
+  if (!temHorimetro(r)) falta.push('horímetro')
   if (!r.fotos) falta.push('ao menos uma foto')
   return falta
+}
+
+/**
+ * Chaves do Atlas que JA SAO o horimetro dentro de uma categoria.
+ *
+ * A ficha de manutencao chama de `horimetro`; a de ida ao mar tem dois,
+ * `horimetro_saida` e `horimetro_retorno`. Quando a categoria traz o seu, o
+ * campo generico some da tela — dois campos pedindo a mesma leitura fazem quem
+ * preenche escolher um e deixar o outro vazio, e o escritorio recebe metade.
+ */
+export const CHAVES_HORIMETRO = ['horimetro', 'horimetro_saida', 'horimetro_retorno']
+
+/** Chaves do Atlas que ja sao a observacao. */
+export const CHAVES_OBSERVACAO = ['observacao']
+
+function temHorimetro(r: Rascunho): boolean {
+  if (r.horimetro.trim()) return true
+  const e = r.especificos || {}
+  return CHAVES_HORIMETRO.some((k) => (e[k] ?? '').trim() !== '')
 }

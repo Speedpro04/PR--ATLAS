@@ -1,0 +1,2093 @@
+{
+ "_origem": "gerado do workflow recorte-e3 + src/fichas/servicos.json",
+ "_criterio": "fica no barco so o que EXISTE la e SOME se ninguem registrar na hora (PRD secao 2)",
+ "_aviso": "categorias com verificado=false nao passaram pelo cetico adversarial e tendem a estar INFLADAS",
+ "categorias": {
+  "operacao": {
+   "verificado": true,
+   "campos": [
+    {
+     "key": "data",
+     "label": "Data da operação",
+     "type": "date",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É a data da ida ao mar, não a data da digitação. Se o registro for feito depois, o escritório não tem como saber em que dia o barco saiu."
+    },
+    {
+     "key": "finalidade",
+     "label": "Finalidade",
+     "type": "select",
+     "options": [
+      "Lazer",
+      "Teste",
+      "Translado",
+      "Manutenção",
+      "Vistoria",
+      "Outro"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Só quem estava a bordo sabe se foi lazer, teste ou translado. Um toque, e ninguém reconstitui isso depois."
+    },
+    {
+     "key": "condutor",
+     "label": "Condutor (quem pilotou)",
+     "type": "text",
+     "options": null,
+     "placeholder": "Nome do condutor",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Quem estava no leme é a informação central da ida ao mar e some com a memória. É o que a seguradora pergunta primeiro quando há avaria."
+    },
+    {
+     "key": "pessoas_bordo",
+     "label": "Pessoas a bordo",
+     "type": "number",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Quantidade de gente a bordo só existe naquele momento. Número curto, teclado numérico, e não se reconstitui."
+    },
+    {
+     "key": "hora_saida",
+     "label": "Hora de saída",
+     "type": "time",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Hora real da saída. Registrada na hora é exata; no fim do dia já vira estimativa."
+    },
+    {
+     "key": "horimetro_saida",
+     "label": "Horímetro na saída",
+     "type": "number",
+     "options": null,
+     "placeholder": "Leitura ao sair",
+     "suffix": "h",
+     "showIf": null,
+     "porque": "Leitura de instrumento — o horímetro anda. Passou a saída, o número não volta mais."
+    },
+    {
+     "key": "hora_retorno",
+     "label": "Hora de retorno",
+     "type": "time",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Fecha a janela de uso do barco. Só quem recebeu a embarcação no pier sabe."
+    },
+    {
+     "key": "horimetro_retorno",
+     "label": "Horímetro no retorno",
+     "type": "number",
+     "options": null,
+     "placeholder": "Leitura ao voltar",
+     "suffix": "h",
+     "showIf": null,
+     "porque": "Leitura de instrumento, sempre barco. É a diferença entre saída e retorno que gera as horas de motor do período."
+    },
+    {
+     "key": "combustivel",
+     "label": "Combustível no retorno",
+     "type": "select",
+     "options": [
+      "Cheio",
+      "3/4",
+      "1/2",
+      "1/4",
+      "Reserva"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É leitura de marcador no painel, igual ao horímetro. Depois do reabastecimento a informação não existe mais."
+    },
+    {
+     "key": "retorno_estado",
+     "label": "Retornou sem danos?",
+     "type": "select",
+     "options": [
+      "Sim, sem danos",
+      "Não, com avaria"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É a constatação do estado do barco no momento da devolução. Depois que o barco sai do pier, não dá mais para dizer se o dano veio desta saída ou da próxima."
+    },
+    {
+     "key": "observacao",
+     "label": "Observações gerais",
+     "type": "textarea",
+     "options": null,
+     "placeholder": "Qualquer detalhe relevante da operação",
+     "suffix": null,
+     "showIf": null,
+     "porque": "É onde cabe o barulho estranho, o cheiro, a manobra difícil — tudo que só quem estava lá percebeu. Opcional, não trava o registro."
+    }
+   ],
+   "evidencias": [
+    {
+     "key": "foto_avaria",
+     "label": "Foto da avaria",
+     "quando": "requiredIf retorno_estado = \"Não, com avaria\" — o dano só existe fotografável naquele momento, no pier; depois o barco é lavado, guardado ou reparado e a prova some."
+    }
+   ]
+  },
+  "seguro": {
+   "verificado": true,
+   "campos": [],
+   "evidencias": [
+    {
+     "key": "apolice_pdf",
+     "label": "Apólice completa (PDF)",
+     "quando": "sempre — required:true, trava o registro. É a única coisa desta ficha que pode sumir: se o documento passa pela mão do colaborador (papel no píer ou tela do celular do proprietário), fotografar ali é o que garante que todos os 17 campos de gaveta possam ser preenchidos depois. O accept já aceita imagem, então a captura por câmera resolve."
+    }
+   ]
+  },
+  "manutencao": {
+   "verificado": true,
+   "campos": [
+    {
+     "key": "horimetro",
+     "label": "Horímetro na troca",
+     "type": "number",
+     "options": null,
+     "placeholder": "Leitura no horímetro",
+     "suffix": "h",
+     "showIf": null,
+     "porque": "Exceção explícita: leitura de instrumento. O horímetro anda — a leitura de hoje não se refaz amanhã, e é ela que calcula o próximo intervalo."
+    },
+    {
+     "key": "troca_oleo",
+     "label": "Houve troca de óleo?",
+     "type": "select",
+     "options": [
+      "Sim",
+      "Não"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Gate de um toque e ação do dia. Sem ele no barco a foto do óleo drenado (showIf) não tem como aparecer no pier."
+    },
+    {
+     "key": "filtro_oleo",
+     "label": "Filtro de Óleo trocado?",
+     "type": "select",
+     "options": [
+      "Sim",
+      "Não"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "O filtro velho vai pro lixo. Gate de um toque que libera a foto do novo ao lado do velho — a trava de evidência."
+    },
+    {
+     "key": "filtro_combustivel",
+     "label": "Filtro de Combustível trocado?",
+     "type": "select",
+     "options": [
+      "Sim",
+      "Não"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Mesma lógica: peça descartada no ato. Um toque agora, ou ninguém saberá se foi trocada."
+    },
+    {
+     "key": "separador_agua",
+     "label": "Separador de Água (Racor) trocado/drenado?",
+     "type": "select",
+     "options": [
+      "Trocado",
+      "Drenado",
+      "Não"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Drenagem não deixa rastro físico nem papel — nem peça no lixo. Se não marcar na hora, some por completo."
+    },
+    {
+     "key": "filtro_ar",
+     "label": "Filtro de Ar trocado?",
+     "type": "select",
+     "options": [
+      "Sim",
+      "Não"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Ação do dia, sem rastro; um toque com a mão suja."
+    },
+    {
+     "key": "scr_alarme_nox",
+     "label": "Status do Controle de NOx",
+     "type": "select",
+     "options": [
+      "Sem alarmes (Operação limpa)",
+      "Alarme NOx ativado (Falha de emissão)",
+      "N/A"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "sistema_scr",
+      "equals": "Sim"
+     },
+     "porque": "Leitura de painel, mesma família do horímetro: alarme lido agora é apagado/limpo e desaparece sem deixar registro."
+    },
+    {
+     "key": "scr_limpeza_injetor",
+     "label": "Manutenção do Injetor de Arla (Descarbonização)",
+     "type": "select",
+     "options": [
+      "Injetor Limpo/Descarbonizado nesta O.S.",
+      "Não realizado",
+      "Injetor Substituído"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "sistema_scr",
+      "equals": "Sim"
+     },
+     "porque": "É a ação executada nesta O.S.; se não marcar agora, não há como provar depois que foi feita."
+    },
+    {
+     "key": "troca_arrefecimento",
+     "label": "Houve troca de fluido de arrefecimento?",
+     "type": "select",
+     "options": [
+      "Sim",
+      "Não"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Ação do dia; o fluido velho vai pro tambor. Gate de um toque."
+    },
+    {
+     "key": "troca_impeller",
+     "label": "Impeller da bomba de água do mar trocado?",
+     "type": "select",
+     "options": [
+      "Sim",
+      "Não"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "O impeller velho (e as pás que faltam nele) vai pro lixo. Só quem abriu a bomba sabe."
+    },
+    {
+     "key": "troca_zincos",
+     "label": "Zincos anódicos (ânodos de sacrifício) trocados?",
+     "type": "select",
+     "options": [
+      "Sim",
+      "Não"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Zinco velho vai pro lixo e o novo fica submerso: depois ninguém confere sem tirar o barco da água."
+    },
+    {
+     "key": "zincos_localizacao",
+     "label": "Localização dos zincos",
+     "type": "text",
+     "options": null,
+     "placeholder": "Eixo, leme, rabeta, casco...",
+     "suffix": null,
+     "showIf": {
+      "key": "troca_zincos",
+      "equals": "Sim"
+     },
+     "porque": "Eixo, leme, rabeta — só quem ficou embaixo do barco sabe quais trocou. Texto de duas palavras, não é digitação longa."
+    },
+    {
+     "key": "observacao",
+     "label": "Observações técnicas",
+     "type": "textarea",
+     "options": null,
+     "placeholder": "Descreva detalhes da manutenção, condição do óleo drenado (cor, partículas metálicas), estado dos filtros removidos, nível de desgaste dos zincos...",
+     "suffix": null,
+     "showIf": null,
+     "porque": "É onde entra o que ele viu e jogou fora: cor do óleo drenado, limalha, filtro colapsado, desgaste do zinco. Isso morre ali. Opcional e ditável — a foto cobre o resto."
+    }
+   ],
+   "evidencias": [
+    {
+     "key": "foto_horimetro",
+     "label": "Foto do horímetro no momento da troca",
+     "quando": "Sempre. É a prova que não se refaz — o horímetro anda. Atenção: hoje este slot NÃO tem required nem requiredIf no JSON; a obrigatoriedade vem da regra de travas de evidência e precisa ser imposta na camada do PWA."
+    },
+    {
+     "key": "foto_filtros",
+     "label": "Foto dos filtros trocados (novos e velhos)",
+     "quando": "Sempre que filtro_oleo = Sim ou filtro_combustivel = Sim. É a foto da peça nova ao lado da velha, a trava que não pode ser afrouxada; a peça velha vai pro lixo no mesmo dia. Hoje sem required/requiredIf no JSON — a trava é do PWA."
+    },
+    {
+     "key": "foto_oleo_drenado",
+     "label": "Foto do óleo drenado",
+     "quando": "Quando troca_oleo = Sim (o slot já tem esse showIf). Cor, partículas e aspecto leitoso somem quando o óleo vai pro tambor. Hoje sem requiredIf no JSON — falta o par requiredIf do showIf."
+    },
+    {
+     "key": "nota_fiscal",
+     "label": "Nota fiscal do serviço",
+     "quando": "requiredIf: valor preenchido (truthy) — é a única trava já declarada no JSON desta ficha. Como valor é GAVETA, ela dispara na revisão do escritório e não no pier: o barco não deve pedir NF."
+    }
+   ]
+  },
+  "motor": {
+   "verificado": true,
+   "campos": [
+    {
+     "key": "servico",
+     "label": "Serviço executado",
+     "type": "text",
+     "options": null,
+     "placeholder": "Ex: Revisão de 100 horas / Repower / Correias",
+     "suffix": null,
+     "showIf": null,
+     "porque": "O que foi feito no motor só existe na cabeça de quem acabou de fazer; nenhum papel do escritório reconstitui isso depois."
+    },
+    {
+     "key": "helice_estado",
+     "label": "Estado visual (cavitação, amassados)",
+     "type": "select",
+     "options": [
+      "Excelente",
+      "Bom (Leve desgaste)",
+      "Amassado / Cavitação",
+      "Crítico"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Só se vê com o barco fora d'água ou o drive exposto; a hélice sai para reparo ou volta para a água e o estado some. Select, um toque."
+    },
+    {
+     "key": "observacao",
+     "label": "Observações de diagnóstico NDT / detalhes",
+     "type": "textarea",
+     "options": null,
+     "placeholder": "Pontos críticos, diagnósticos, laudos e observações...",
+     "suffix": null,
+     "showIf": null,
+     "porque": "É o único lugar da anomalia que ninguém previu — ruído, folga, vazamento. É opcional e aceita ditado por voz, então não trava a mão suja, mas se não sair na hora não existe mais."
+    }
+   ],
+   "evidencias": [
+    {
+     "key": "foto_serie",
+     "label": "Foto do número de série (bloco)",
+     "quando": "sempre"
+    },
+    {
+     "key": "foto_sala_maquinas",
+     "label": "Foto da sala de máquinas",
+     "quando": "sempre"
+    },
+    {
+     "key": "foto_horimetro",
+     "label": "Foto do horímetro",
+     "quando": "sempre"
+    },
+    {
+     "key": "nota_fiscal",
+     "label": "Nota fiscal do serviço",
+     "quando": "requiredIf valor truthy — como o campo valor foi para a gaveta, essa trava não dispara no barco: ela vale na revisão do escritório, onde a NF está. A trava não cai, muda de etapa."
+    }
+   ]
+  },
+  "casco": {
+   "verificado": false,
+   "campos": [
+    {
+     "key": "servico",
+     "label": "Serviço ou Vistoria realizada",
+     "type": "text",
+     "options": null,
+     "placeholder": "Ex: Vistoria de fundo no seco / Inspeção estrutural periódica",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Só quem foi ao barco sabe o escopo da visita (vistoria de fundo, inspeção periódica). Sem isso as fotos e vídeos chegam órfãos na revisão e ninguém reconstitui o que foi olhado."
+    },
+    {
+     "key": "status",
+     "label": "Status estrutural do casco",
+     "type": "select",
+     "options": [
+      "Excelente",
+      "Regular / Operacional",
+      "Atenção (Recomenda-se Reparo)",
+      "Crítico (Avaria Estrutural)"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É o julgamento visual feito com o barco no seco. Voltou para a água, não se refaz sem pagar outro içamento."
+    },
+    {
+     "key": "responsavel",
+     "label": "Inspetor / Engenheiro ou Estaleiro",
+     "type": "text",
+     "options": null,
+     "placeholder": "Responsável técnico",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Quem estava com a mão no casco naquele dia. O escritório não sabe qual técnico foi; digitação curta, cabe no pátio."
+    },
+    {
+     "key": "data",
+     "label": "Data da vistoria",
+     "type": "date",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Um toque (padrão = hoje). Preenchida dias depois, a data escorrega e o histórico perde a ordem — e é a data que a seguradora lê."
+    },
+    {
+     "key": "laudo_osmose",
+     "label": "Constatação de Osmose",
+     "type": "select",
+     "options": [
+      "Nenhuma constatada",
+      "Superficial (Bolhas isoladas)",
+      "Moderada (Tratamento necessário)",
+      "Severa (Delaminação em andamento)"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Bolha só aparece com o casco seco e lavado. Em poucas horas o barco desce e a constatação some."
+    },
+    {
+     "key": "gelcoat_estado",
+     "label": "Estado visual do Gelcoat",
+     "type": "select",
+     "options": [
+      "Excelente",
+      "Trincas de tensão (aranhas)",
+      "Trincas estruturais",
+      "Restaurado"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Trinca de tensão é leitura de olho no casco exposto; depois da pintura ou da volta à água não dá para rever."
+    },
+    {
+     "key": "cavernas_reforcos",
+     "label": "Condição das cavernas e anteparas",
+     "type": "select",
+     "options": [
+      "Excelente (Íntegro)",
+      "Sinais de fadiga / trincas",
+      "Avaria identificada"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Exige estar dentro do porão com os acessos abertos. Fechou o piso, acabou a janela de observação."
+    },
+    {
+     "key": "passagem_casco_seacocks",
+     "label": "Condição de sea-cocks e passagens de casco",
+     "type": "select",
+     "options": [
+      "Excelente (Operando suave)",
+      "Alguns travados ou oxidados",
+      "Crítico (Vazamento / Oxidação severa)"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É constatado abrindo e fechando o registro com a mão, com o barco no seco. Não se consulta em papel nenhum."
+    },
+    {
+     "key": "quilha_estado",
+     "label": "Quilha e leme (fixação e integridade)",
+     "type": "select",
+     "options": [
+      "Excelente (Sem folgas)",
+      "Marcas de impacto",
+      "Parafusos oxidados / folga na junção",
+      "N/A (Lancha / Sem quilha)"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Folga e marca de impacto só se veem com o barco içado e o leme na mão."
+    },
+    {
+     "key": "porao_estado",
+     "label": "Estado geral do porão",
+     "type": "select",
+     "options": [
+      "Seco e limpo",
+      "Presença de água doce",
+      "Presença de água salgada",
+      "Presença de óleo / combustível"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Água salgada ou óleo no porão é a prova mais perecível da ficha: o porão é esgotado e limpo no mesmo dia."
+    }
+   ],
+   "evidencias": [
+    {
+     "key": "video_estrutura_interna",
+     "label": "Vídeo da Estrutura Interna (Porão/Cavernas) *",
+     "quando": "sempre — required; é a prova não refazível do interior com os acessos abertos"
+    },
+    {
+     "key": "foto_fundo_externo",
+     "label": "Foto do fundo externo / casco no seco *",
+     "quando": "sempre — required; só existe com o barco içado"
+    }
+   ]
+  },
+  "velame": {
+   "verificado": false,
+   "campos": [
+    {
+     "key": "servico",
+     "label": "Serviço realizado",
+     "type": "text",
+     "options": null,
+     "placeholder": "Ex: Inspeção de rigging e lavagem de velas",
+     "suffix": null,
+     "showIf": null,
+     "porque": "É a descrição do que foi feito naquele barco naquele dia; o escritório não tem de onde tirar isso depois — some junto com a memória de quem estava no pier."
+    },
+    {
+     "key": "status",
+     "label": "Status estrutural e velas",
+     "type": "select",
+     "options": [
+      "Excelente",
+      "Regular / Operacional",
+      "Atenção (Substituir/Ajustar)",
+      "Crítico"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Julgamento de quem viu o conjunto mastro/velame no local. Com o barco de volta na água, ninguém repete a olhada para preencher isso."
+    },
+    {
+     "key": "rigging_inspecao",
+     "label": "Condição dos Estais e Terminais",
+     "type": "select",
+     "options": [
+      "Íntegros (Sem trincas/fissuras)",
+      "Atenção (Sinais de corrosão)",
+      "Crítico (Substituir cabos/terminais imediatamente)"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Trinca, fissura e corrosão em terminal só se enxergam com alguém no mastro. Reconstituir depois exige subir de novo — caro demais."
+    },
+    {
+     "key": "velas_estado",
+     "label": "Estado das Velas (Mestra / Genoa)",
+     "type": "select",
+     "options": [
+      "Excelente (Tecido firme)",
+      "Regular (Pequenos reparos)",
+      "Atenção (Costuras fracas / UV desgastado)",
+      "Crítico (Rasgado / Trocar)"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "A vela segue para a velaria ou volta enrolada no mesmo dia; o estado do tecido e das costuras naquele momento não fica visível depois."
+    },
+    {
+     "key": "catracas_lubrificacao",
+     "label": "Catracas de bordo lubrificadas?",
+     "type": "select",
+     "options": [
+      "Sim, todas lubrificadas",
+      "Não (Recomenda-se lubrificar)",
+      "N/A"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Ato executado na hora e sem vestígio: ninguém consegue conferir depois se a catraca foi ou não lubrificada."
+    },
+    {
+     "key": "enrolador_genoa",
+     "label": "Funcionamento do Enrolador de Genoa",
+     "type": "select",
+     "options": [
+      "Suave e operacional",
+      "Pesado / Travando",
+      "Não possui enrolador",
+      "N/A"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Só se sabe com a mão no enrolador, com o barco à mão. Depois de entregue, refazer o teste exige voltar ao barco."
+    },
+    {
+     "key": "observacao",
+     "label": "Observações de rigging, mastreação e velas",
+     "type": "textarea",
+     "options": null,
+     "placeholder": "Descreva a tensão dos estais, marcas de desgaste em adriças/escotas, estado do tecido das velas...",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Tensão de estai, marca de desgaste em adriça e costura fraca existem só no olho de quem estava lá; o escritório não tem como reconstituir essa leitura. Fica opcional para não travar a mão suja."
+    }
+   ],
+   "evidencias": [
+    {
+     "key": "foto_rigging",
+     "label": "Foto de estais / mastreação",
+     "quando": "sempre — é a prova que não se refaz: o terminal fotografado hoje pode estar trocado, ou o mastro já de volta em pé, amanhã"
+    },
+    {
+     "key": "nota_fiscal",
+     "label": "Nota fiscal do serviço",
+     "quando": "requiredIf: quando o campo valor está preenchido. Como valor é gaveta, essa trava cai na revisão do escritório, não no pier"
+    }
+   ]
+  },
+  "sinistros": {
+   "verificado": false,
+   "campos": [
+    {
+     "key": "momento",
+     "label": "O que voce esta registrando",
+     "type": "select",
+     "options": [
+      "Ocorrencia do sinistro",
+      "Reparo concluido"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Define o ramo inteiro da ficha (ocorrencia x reparo); sem ele o app nao sabe se cobra foto do antes ou do depois."
+    },
+    {
+     "key": "servico",
+     "label": "Resumo do ocorrido",
+     "type": "text",
+     "options": null,
+     "placeholder": "Ex: Impacto com objeto submerso na proa, bombordo",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Uma linha na voz de quem viu. Algumas horas depois ja vira versao de terceiro."
+    },
+    {
+     "key": "tipo_sinistro",
+     "label": "Tipo de sinistro",
+     "type": "select",
+     "options": [
+      "Colisao com outra embarcacao",
+      "Impacto com objeto submerso",
+      "Encalhe",
+      "Choque com estrutura (pier, cais, boia)",
+      "Incendio ou principio de incendio",
+      "Alagamento / entrada de agua",
+      "Afundamento parcial ou total",
+      "Temporal / condicoes de mar",
+      "Vandalismo, furto ou roubo",
+      "Falha estrutural sem impacto",
+      "Falha mecanica com dano a outros sistemas",
+      "Outro"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Toque unico numa lista, e a causa so e obvia para quem estava no local antes de qualquer mexida."
+    },
+    {
+     "key": "data",
+     "label": "Data da ocorrencia",
+     "type": "date",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Ancora do registro e da contagem de prazo de aviso a seguradora; data lembrada depois vira aproximacao."
+    },
+    {
+     "key": "hora",
+     "label": "Hora aproximada",
+     "type": "time",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Hora sai da memoria no mesmo dia e e o que cruza com mare, clima e movimento do canal."
+    },
+    {
+     "key": "local_ocorrencia",
+     "label": "Local da ocorrencia",
+     "type": "text",
+     "options": null,
+     "placeholder": "Ex: Canal de acesso, Baia de Ilhabela",
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "So quem estava a bordo sabe o ponto; o escritorio nao reconstitui."
+    },
+    {
+     "key": "situacao_embarcacao",
+     "label": "A embarcacao estava",
+     "type": "select",
+     "options": [
+      "Navegando",
+      "Fundeada",
+      "Atracada",
+      "Em Marina seca / no seco",
+      "Sendo rebocada",
+      "Em transporte terrestre"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Navegando, fundeada ou no seco muda a cobertura, e e estado do instante."
+    },
+    {
+     "key": "responsavel",
+     "label": "Quem reportou / condutor no momento",
+     "type": "text",
+     "options": null,
+     "placeholder": "Nome de quem estava a bordo ou constatou",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Quem viu e quem conduzia; trocou o turno, ninguem confirma."
+    },
+    {
+     "key": "houve_vitimas",
+     "label": "Houve feridos ou vitimas?",
+     "type": "select",
+     "options": [
+      "Nao",
+      "Sim - sem gravidade",
+      "Sim - com atendimento medico"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Fato do momento com consequencia legal imediata; toque unico."
+    },
+    {
+     "key": "autoridade_acionada",
+     "label": "Autoridade maritima acionada?",
+     "type": "select",
+     "options": [
+      "Nao",
+      "Sim - Capitania dos Portos",
+      "Sim - Marinha / Salvamento",
+      "Sim - Bombeiros",
+      "Sim - Policia"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Quem estava la sabe na hora se a Capitania foi chamada; o protocolo em papel chega depois."
+    },
+    {
+     "key": "sis_casco",
+     "label": "Atingiu: casco / estrutura",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Marcacao por toque do que foi atingido, vista no local antes de reparo ou desmontagem."
+    },
+    {
+     "key": "sis_propulsao",
+     "label": "Atingiu: motor / propulsao",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Mapa do dano so existe enquanto o dano esta la; um toque, sem digitacao."
+    },
+    {
+     "key": "sis_governo",
+     "label": "Atingiu: leme, eixo e governo",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Constatacao visual imediata; depois do reparo ninguem separa o que era."
+    },
+    {
+     "key": "sis_eletrica",
+     "label": "Atingiu: eletrica",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Observacao do momento (fumaca, curto, painel morto) que nao sobrevive a limpeza."
+    },
+    {
+     "key": "sis_eletronica",
+     "label": "Atingiu: eletronica / navegacao",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Equipamento molhado ou arrancado e visto na hora; toque unico."
+    },
+    {
+     "key": "sis_interior",
+     "label": "Atingiu: interior / acomodacoes",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Interior alagado ou queimado e limpo em horas; a marcacao tem que ser na hora."
+    },
+    {
+     "key": "sis_conves",
+     "label": "Atingiu: conves e superestrutura",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Constatacao visual no local, sem custo de digitacao."
+    },
+    {
+     "key": "sis_auxiliares",
+     "label": "Atingiu: sistemas auxiliares (bombas, gerador)",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Bomba ou gerador parado e sintoma do momento; depois do conserto some."
+    },
+    {
+     "key": "extensao_dano",
+     "label": "Extensao do dano",
+     "type": "select",
+     "options": [
+      "Cosmetico (sem comprometimento)",
+      "Atinge o laminado / estrutura superficial",
+      "Perfuracao ou dano estrutural localizado",
+      "Dano estrutural extenso",
+      "Perda total"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Avaliacao do dano como ele estava. Assim que reparam, o estado original deixa de existir."
+    },
+    {
+     "key": "embarcacao_navegavel",
+     "label": "A embarcacao segue navegavel?",
+     "type": "select",
+     "options": [
+      "Sim",
+      "Sim, com restricao",
+      "Nao - parada ate reparo"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Ocorrencia do sinistro"
+     },
+     "porque": "Decisao operacional imediata: libera ou para o barco; quem decide esta no pier."
+    },
+    {
+     "key": "status",
+     "label": "Situacao final do ativo",
+     "type": "select",
+     "options": [
+      "Totalmente reparado - sem ressalva",
+      "Reparado com ressalva tecnica",
+      "Reparo parcial - pendencias em aberto",
+      "Nao reparado"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "momento",
+      "equals": "Reparo concluido"
+     },
+     "porque": "E o aceite de quem recebeu o barco reparado, dado na inspecao presencial da entrega."
+    },
+    {
+     "key": "observacao",
+     "label": "Observacoes",
+     "type": "textarea",
+     "options": null,
+     "placeholder": "Qualquer detalhe relevante para quem for avaliar este historico no futuro...",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Campo livre e opcional para o detalhe perecivel (cheiro de combustivel, ruido, agua no porao). Por ser opcional, nunca trava o envio."
+    }
+   ],
+   "evidencias": [
+    {
+     "key": "foto_sinistro",
+     "label": "Fotos do dano (ANTES) *",
+     "quando": "requiredIf momento = \"Ocorrencia do sinistro\" — o dano so existe ate o reparo comecar; sem o antes nao ha comparacao."
+    },
+    {
+     "key": "foto_reparo",
+     "label": "Fotos do reparo concluido (DEPOIS) *",
+     "quando": "requiredIf momento = \"Reparo concluido\" — mesmo angulo do antes; e o par de fotos que prova o reparo para a seguradora."
+    }
+   ]
+  },
+  "eletrica": {
+   "verificado": false,
+   "campos": [
+    {
+     "key": "servico",
+     "label": "Serviço executado",
+     "type": "text",
+     "options": null,
+     "placeholder": "Ex: Substituição do banco de baterias de serviço e calibração do VHF DSC",
+     "suffix": null,
+     "showIf": null,
+     "porque": "só quem executou sabe o que foi feito; ninguém reconstitui isso depois sem adivinhar"
+    },
+    {
+     "key": "natureza_manutencao",
+     "label": "Natureza da Manutenção",
+     "type": "select",
+     "options": [
+      "Preditiva / Preventiva (Programada)",
+      "Corretiva (Reparo / Falha)"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "preventiva ou corretiva é a intenção da visita, existe agora e um toque resolve"
+    },
+    {
+     "key": "sistema_afetado",
+     "label": "Sistema Elétrico / Eletrônico Afetado (Norma Náutica)",
+     "type": "select",
+     "options": [
+      "Banco de Baterias (Serviço / Partida / Casa)",
+      "Alternadores e Sistema de Carregamento",
+      "Painel Elétrico Principal e Disjuntores",
+      "Sistema de Distribuição CC (12V / 24V)",
+      "Sistema de Distribuição CA (110V / 220V / Shore Power)",
+      "Gerador de Bordo",
+      "VHF / Rádio DSC (NORMAM — Canal 16)",
+      "Sistema AIS (Identificação Automática)",
+      "GPS / Ploter / Sonda / Ecobatímetro",
+      "EPIRB / PLB (Radiobaliza — ANATEL)",
+      "Piloto Automático",
+      "Radar de Navegação",
+      "Iluminação de Navegação (Lanternas RIPEAM/COLREGS)",
+      "Sistema de Monitoramento e Instrumentação",
+      "Aterramento e Proteção Galvânica",
+      "Geral / Outro"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "define o que foi mexido; é a informação que dá sentido às fotos e ao horímetro do dia"
+    },
+    {
+     "key": "status",
+     "label": "Status após o serviço",
+     "type": "select",
+     "options": [
+      "Concluído",
+      "Pendente",
+      "Atenção"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "concluído, pendente ou atenção é o estado no momento em que o técnico deixa o barco"
+    },
+    {
+     "key": "responsavel",
+     "label": "Responsável / quem executou",
+     "type": "text",
+     "options": null,
+     "placeholder": "Eletricista náutico ou técnico de eletrônica",
+     "suffix": null,
+     "showIf": null,
+     "porque": "quem estava com a mão no painel só é sabido no pier; no escritório vira chute"
+    },
+    {
+     "key": "data",
+     "label": "Data do serviço",
+     "type": "date",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "a data do que aconteceu, não a da digitação; já vem preenchida com hoje"
+    },
+    {
+     "key": "horimetro",
+     "label": "Horímetro do motor na inspeção",
+     "type": "number",
+     "options": null,
+     "placeholder": "Horímetro",
+     "suffix": "h",
+     "showIf": null,
+     "porque": "leitura de instrumento: o horímetro anda, o número de hoje não existe mais amanhã"
+    },
+    {
+     "key": "baterias_tensao",
+     "label": "Tensão medida no banco de baterias",
+     "type": "number",
+     "options": null,
+     "placeholder": "Ex: 12.6 ou 25.0",
+     "suffix": "V",
+     "showIf": null,
+     "porque": "medição de multímetro feita ali; a tensão muda em minutos e não se refaz"
+    },
+    {
+     "key": "baterias_estado",
+     "label": "Estado das Baterias (Laudo de Carga)",
+     "type": "select",
+     "options": [
+      "Excelente — acima de 80% da capacidade nominal",
+      "Bom — 60 a 80% da capacidade",
+      "Atenção — 40 a 60% (próximo da troca)",
+      "Crítico — abaixo de 40% (substituir imediatamente)"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "resultado do teste de carga executado na hora; sem registro, o teste some junto com o equipamento guardado"
+    },
+    {
+     "key": "alternador_status",
+     "label": "Status do Alternador Principal",
+     "type": "select",
+     "options": [
+      "Carregando corretamente",
+      "Abaixo da tensão ideal",
+      "Sem carga (defeituoso)",
+      "N/A"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "é o que o técnico viu carregando com o motor rodando; depois o motor está desligado"
+    },
+    {
+     "key": "carregador_bordo",
+     "label": "Carregador de Bateria de Bordo (Shore Power)",
+     "type": "select",
+     "options": [
+      "Operacional (Verificado)",
+      "Com avaria",
+      "Não instalado",
+      "N/A"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "verificação feita com o barco ligado na tomada do pier, naquele momento"
+    },
+    {
+     "key": "gerador_horimetro",
+     "label": "Horímetro do Gerador de Bordo",
+     "type": "number",
+     "options": null,
+     "placeholder": "Horas de uso do gerador",
+     "suffix": "h",
+     "showIf": null,
+     "porque": "leitura de instrumento: sempre barco, o contador continua andando"
+    },
+    {
+     "key": "gerador_status",
+     "label": "Status do Gerador",
+     "type": "select",
+     "options": [
+      "Operacional (Testado em carga)",
+      "Com avaria",
+      "Não instalado",
+      "N/A"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "resultado do teste em carga, que só existe enquanto o gerador está rodando"
+    },
+    {
+     "key": "painel_disjuntores",
+     "label": "Painel Elétrico e Disjuntores",
+     "type": "select",
+     "options": [
+      "Todos os disjuntores operacionais",
+      "Disjuntor(es) com defeito / trocado(s)",
+      "Curto ou fiação com dano identificado",
+      "Substituição do painel realizada"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "estado observado com o painel aberto; fechou a tampa, acabou a observação"
+    },
+    {
+     "key": "isolamento_galvanico",
+     "label": "Isolamento Galvânico / Teste de Fuga de Corrente",
+     "type": "select",
+     "options": [
+      "Testado — Sem fuga de corrente detectada",
+      "Alerta — Pequena fuga (zincos desgastando rápido)",
+      "Crítico — Fuga de corrente detectada (Risco galvânico)",
+      "Não testado nesta manutenção"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "resultado de teste de fuga feito com instrumento no local; não se remonta no escritório"
+    },
+    {
+     "key": "vhf_dsc_canal16",
+     "label": "Canal 16 monitorado e operacional? (Obrigatório por lei)",
+     "type": "select",
+     "options": [
+      "Sim — Canal 16 monitorado e testado",
+      "Não (Em reparo)",
+      "VHF sem DSC instalado"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "teste de rádio feito a bordo; é prova de conformidade NORMAM daquele dia"
+    },
+    {
+     "key": "vhf_dsc_status",
+     "label": "Status do VHF DSC",
+     "type": "select",
+     "options": [
+      "Operacional (Testado)",
+      "Com avaria",
+      "Substituído nesta O.S.",
+      "N/A"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "operacional ou com avaria é o que o teste no local mostrou, um toque"
+    },
+    {
+     "key": "epirb_instalada",
+     "label": "EPIRB ou PLB instalada a bordo?",
+     "type": "select",
+     "options": [
+      "Sim",
+      "Não"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "presença física do equipamento a bordo: só se vê estando lá, e é sim ou não"
+    },
+    {
+     "key": "ais_instalado",
+     "label": "Sistema AIS instalado?",
+     "type": "select",
+     "options": [
+      "Sim — Classe B (Recreio)",
+      "Sim — Classe A (Comercial)",
+      "Não instalado"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "presença e classe do equipamento vistas no painel, um toque"
+    },
+    {
+     "key": "ais_status",
+     "label": "Status do AIS",
+     "type": "select",
+     "options": [
+      "Transmitindo e visível no tráfego",
+      "Com avaria",
+      "Substituído nesta O.S."
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": {
+      "key": "ais_instalado",
+      "equals": "Sim — Classe B (Recreio)"
+     },
+     "porque": "transmitindo e visível no tráfego é observação de tela viva; o pai ais_instalado também é barco"
+    },
+    {
+     "key": "gps_ploter_status",
+     "label": "Status do GPS / Ploter",
+     "type": "select",
+     "options": [
+      "Operacional — Cartas atualizadas",
+      "Operacional — Cartas desatualizadas",
+      "Com avaria",
+      "N/A"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "cartas atualizadas ou não é o que a tela mostrou ligada no barco"
+    },
+    {
+     "key": "sonda_ecobatimetro",
+     "label": "Status da Sonda / Ecobatímetro",
+     "type": "select",
+     "options": [
+      "Operacional (Leitura de fundo precisa)",
+      "Com avaria",
+      "Não instalado"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "leitura de fundo só se confere com a sonda ligada, na água"
+    },
+    {
+     "key": "piloto_automatico",
+     "label": "Status do Piloto Automático",
+     "type": "select",
+     "options": [
+      "Operacional (Testado em manobra)",
+      "Com avaria",
+      "Não instalado"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "testado em manobra: existe durante o teste e não depois"
+    },
+    {
+     "key": "radar_status",
+     "label": "Status do Radar de Navegação",
+     "type": "select",
+     "options": [
+      "Operacional (Testado)",
+      "Com avaria",
+      "Não instalado"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "resultado do teste do radar ligado, um toque"
+    },
+    {
+     "key": "luzes_navegacao",
+     "label": "Luzes de Navegação (RIPEAM/COLREGS 1972)",
+     "type": "select",
+     "options": [
+      "Todas conformes — Mastro, Bordo, Popa e Âncora operacionais",
+      "Avaria em lanterna de mastro",
+      "Avaria em lanterna de bordo (BB/BE)",
+      "Avaria em lanterna de popa",
+      "Avaria em lanterna de âncora",
+      "Múltiplas lanternas com defeito — Não navegável à noite"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "lanterna queimada é achado visual do momento; ninguém sobe no mastro de novo para conferir"
+    }
+   ],
+   "evidencias": [
+    {
+     "key": "foto_painel",
+     "label": "Foto do Painel Elétrico Principal",
+     "quando": "sempre — required na ficha; disjuntores, barramento e etiquetagem só existem com o painel aberto naquele momento"
+    },
+    {
+     "key": "nota_fiscal",
+     "label": "Nota fiscal / Ordem de Serviço",
+     "quando": "requiredIf valor preenchido — como valor é campo de gaveta, essa trava fecha na revisão do escritório, não no pier"
+    }
+   ]
+  },
+  "seguranca": {
+   "verificado": false,
+   "campos": [
+    {
+     "key": "servico",
+     "label": "Descrição da inspeção",
+     "type": "text",
+     "options": null,
+     "placeholder": "Ex: Vistoria anual de salvatagem NORMAM",
+     "suffix": null,
+     "showIf": null,
+     "porque": "É o que dá nome ao registro. Só quem está no barco sabe qual vistoria está sendo feita agora; o escritório não adivinha depois se foi a anual de salvatagem ou uma conferência pontual."
+    },
+    {
+     "key": "status",
+     "label": "Status geral de segurança",
+     "type": "select",
+     "options": [
+      "Concluído",
+      "Pendente",
+      "Atenção"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Juízo do inspetor sobre o que ele está vendo no momento. Um toque em três opções, e é o veredito que some se ele sair do barco sem dar."
+    },
+    {
+     "key": "data",
+     "label": "Data da vistoria",
+     "type": "date",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É a data de hoje, um toque (o app já abre com ela preenchida). Se o registro só for revisado dias depois, a data real da visita se perde."
+    },
+    {
+     "key": "coletes_qtd",
+     "label": "Quantidade de coletes a bordo",
+     "type": "number",
+     "options": null,
+     "placeholder": "Qtd de coletes",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Contagem que só existe de pé, na frente do paiol. Ninguém no escritório sabe quantos coletes estavam a bordo naquele dia, e coletes mudam de barco. Número curto, uma mão."
+    },
+    {
+     "key": "normam_coletes",
+     "label": "Coletes Homologados",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": "Coletes em quantidade e classes adequadas para a lotação conforme NORMAM",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Conferência visual de quantidade e classe contra a lotação. Um toque. É o olho do colaborador no equipamento naquele instante — não se refaz por telefone."
+    },
+    {
+     "key": "normam_boia",
+     "label": "Boia Circular com Retinida",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": "Boias circulares com cabo retinida flutuante sem emendas e em bom estado",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Estado do cabo (emenda, desgaste) só se vê com a boia na mão. Um toque, e some se ele não marcar ali."
+    },
+    {
+     "key": "normam_sinalizadores",
+     "label": "Sinalizadores Pirotécnicos",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": "Fogos e pirotécnicos homologados pela DPC e dentro do prazo de validade",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Presença e integridade dos fogos no local. Um toque; o escritório não tem como confirmar sem voltar ao barco."
+    },
+    {
+     "key": "normam_extintores",
+     "label": "Extintores de Incêndio",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": "Extintores portáteis com carga, lacre e validade em dia nos locais corretos",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Lacre, manômetro e posição correta a bordo: informação visual do momento. Um toque."
+    },
+    {
+     "key": "normam_esgotamento",
+     "label": "Esgotamento de Porão",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": "Bombas de porão manuais e automáticas testadas e operacionais",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Exige acionar a bomba e ver se funciona. É um teste feito ali, e o resultado não fica registrado em lugar nenhum senão neste toque."
+    },
+    {
+     "key": "normam_ancora",
+     "label": "Equipamento de Fundeio (Âncora e Cabos)",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": "Âncora, amarras e cabos em bom estado e comprimento regulamentar",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Estado de amarras e cabos é inspeção física. Um toque, e a condição do cabo hoje não é reconstituível depois."
+    },
+    {
+     "key": "normam_primeiros_socorros",
+     "label": "Kit de Primeiros Socorros",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": "Caixa de primeiros socorros abastecida com medicamentos válidos",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Abrir a caixa e ver se está abastecida é ato local. Um toque; ninguém confere isso da mesa."
+    },
+    {
+     "key": "normam_luzes",
+     "label": "Luzes de Navegação e Sinalização",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": "Luzes de bordo, alcançado e mastro operacionais para navegação noturna",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Teste de acionamento das luzes de bordo. Resultado do teste feito naquele momento — some se não for marcado."
+    },
+    {
+     "key": "normam_buzina_sino",
+     "label": "Buzina e Refletor de Radar",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": "Aparelho de sinalização sonora e refletor de radar instalados e funcionais",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Buzina se testa buzinando, refletor se confere olhando o mastro. Um toque, informação exclusivamente local."
+    },
+    {
+     "key": "normam_radio_vhf",
+     "label": "Rádio VHF/HF e Equipamento de Salvaguarda",
+     "type": "checkbox",
+     "options": null,
+     "placeholder": "Rádio transceptor homologado com DSC funcional e antenas em ordem",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Ligar o rádio e ver DSC e antena é teste de bordo. Um toque; o escritório só saberia refazendo a visita."
+    },
+    {
+     "key": "observacao",
+     "label": "Pontos críticos / observações de segurança",
+     "type": "textarea",
+     "options": null,
+     "placeholder": "Equipamentos vencendo, ausentes ou com avarias...",
+     "suffix": null,
+     "showIf": null,
+     "porque": "É o achado do colaborador: equipamento faltando, vencendo ou avariado. Campo livre, sem obrigatoriedade, mas é a única memória do que ele viu — some assim que ele desce do barco."
+    }
+   ],
+   "evidencias": [
+    {
+     "key": "foto_extintor_validade",
+     "label": "Foto da etiqueta do extintor",
+     "quando": "sempre (required)"
+    },
+    {
+     "key": "foto_pirotecnicos_validade",
+     "label": "Foto da validade dos sinalizadores",
+     "quando": "sempre (required)"
+    }
+   ]
+  },
+  "drenagem": {
+   "verificado": false,
+   "campos": [
+    {
+     "key": "servico",
+     "label": "Descrição da Inspeção de Drenagem",
+     "type": "text",
+     "options": null,
+     "placeholder": "Ex: Teste geral de bombas de porão e alarmes",
+     "suffix": null,
+     "showIf": null,
+     "porque": "É o que identifica o que foi testado naquela descida ao porão; ninguém reconstitui depois qual teste foi feito."
+    },
+    {
+     "key": "status",
+     "label": "Status do Sistema",
+     "type": "select",
+     "options": [
+      "Excelente",
+      "Pendente",
+      "Atenção",
+      "Crítico"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Julgamento de quem viu o sistema funcionando; é um toque, não digitação, e some quando o técnico sai do barco."
+    },
+    {
+     "key": "responsavel",
+     "label": "Técnico / Inspetor",
+     "type": "text",
+     "options": null,
+     "placeholder": "Responsável pelo teste",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Quem estava com a mão no porão. Vem pré-preenchido do login, então o dedo só confirma."
+    },
+    {
+     "key": "data",
+     "label": "Data do serviço",
+     "type": "date",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É o agora. Pré-preenchida com a data do registro; corrigir depois vira adivinhação."
+    },
+    {
+     "key": "zona",
+     "label": "Zona / Compartimento",
+     "type": "select",
+     "options": [
+      "Proa",
+      "Sala de Máquinas",
+      "Popa",
+      "Meio / Cabines",
+      "Outra"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Diz QUAL porão/bomba foi testada. Só quem estava lá sabe, e sem isso o registro é ambíguo. É um toque."
+    },
+    {
+     "key": "teste_automatico",
+     "label": "Teste do Automático (Float Switch)",
+     "type": "select",
+     "options": [
+      "Operacional",
+      "Avaria / Falha",
+      "Não possui automático"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Resultado de um teste mecânico feito na hora; não se refaz do escritório."
+    },
+    {
+     "key": "alarme_nivel",
+     "label": "Alarme de Nível Alto (High Water Alarm)",
+     "type": "select",
+     "options": [
+      "Instalado e Operacional",
+      "Instalado com Falha",
+      "Não possui alarme instalado"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Só se sabe se o alarme tocou quem estava ouvindo. Estado observado, não consultável."
+    },
+    {
+     "key": "fiacao_estado",
+     "label": "Estado da Fiação e Conexões elétricas",
+     "type": "select",
+     "options": [
+      "Excelente (Estanque)",
+      "Bom",
+      "Atenção (Marcas de Oxidação)",
+      "Crítico (Exposta / Curto)"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Oxidação e fio exposto são estado do momento; se a fiação for trocada amanhã, a prova sumiu."
+    },
+    {
+     "key": "filtro_estado",
+     "label": "Estado do Filtro / Ralo de Sucção",
+     "type": "select",
+     "options": [
+      "Limpo / Desobstruído",
+      "Necessita Limpeza (Parcialmente obstruído)",
+      "Obstruído / Danificado"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Se o colaborador limpar o ralo na sequência, a obstrução que ele viu deixa de existir."
+    },
+    {
+     "key": "observacao",
+     "label": "Observações de Funcionamento / Teste de Vazão",
+     "type": "textarea",
+     "options": null,
+     "placeholder": "Descreva em detalhes o tempo de esgotamento, se há retorno de água pela válvula anti-retorno, etc.",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Tempo de esgotamento e retorno pela anti-retorno só existem durante o teste. Fica opcional e pode sair curto — o escritório reescreve na revisão, mas não inventa o número."
+    }
+   ],
+   "evidencias": [
+    {
+     "key": "foto_bomba",
+     "label": "Foto da bomba instalada",
+     "quando": "sempre — required: true; é a prova que não se refaz e é dela que o escritório tira fabricante, modelo e vazão"
+    }
+   ]
+  },
+  "pintura": {
+   "verificado": false,
+   "campos": [
+    {
+     "key": "servico",
+     "label": "Serviço executado",
+     "type": "text",
+     "options": null,
+     "placeholder": "Ex: Pintura de fundo e polimento do costado",
+     "suffix": null,
+     "showIf": null,
+     "porque": "É a identidade do registro: o que foi feito naquele casco, naquele dia. Ninguém no escritório sabe descrever o serviço que não viu; se sair do barco, vira 'pintura' genérica e o histórico perde valor. Digitação curta, uma linha."
+    },
+    {
+     "key": "status",
+     "label": "Status de pintura/polimento",
+     "type": "select",
+     "options": [
+      "Excelente",
+      "Operacional",
+      "Atenção (Pintura gasta)",
+      "Crítico (Sem proteção/craca)"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É estado observado com o barco no seco. Depois que a embarcação volta para a água, ninguém mais vê o fundo — o escritório não tem como julgar se a pintura está gasta ou crítica. Select de 4 opções, um toque."
+    },
+    {
+     "key": "responsavel",
+     "label": "Responsável / Pintor",
+     "type": "text",
+     "options": null,
+     "placeholder": "Nome do responsável",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Quem estava com a pistola na mão só se sabe no pátio. Reconstituir depois vira chute ('acho que foi o time da tarde'), e é justamente o nome que responde pelo serviço. Nome curto, digitação de segundos."
+    },
+    {
+     "key": "data",
+     "label": "Data do serviço",
+     "type": "date",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É a data de hoje, pré-preenchida, um toque para confirmar. Deixar para o escritório significa datar pela revisão e não pela execução."
+    },
+    {
+     "key": "demaos_fundo",
+     "label": "Quantidade de Demãos aplicadas",
+     "type": "number",
+     "options": null,
+     "placeholder": "Demãos",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Não existe em papel nenhum: só está na cabeça de quem aplicou, e some no fim do turno. A nota diz quantos litros compraram, nunca quantas demãos foram ao casco. Teclado numérico, um dígito."
+    },
+    {
+     "key": "polimento_costado",
+     "label": "Polimento e Vitrificação do Costado?",
+     "type": "select",
+     "options": [
+      "Sim, costado completo",
+      "Apenas gelcoat limpo",
+      "Não realizado"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É escopo executado, visível só enquanto o barco está no berço. Depois de encerado e na água, 'gelcoat limpo' e 'vitrificado' se parecem — restaria a memória de alguém. Select de 3 opções."
+    },
+    {
+     "key": "anodos_sacrificio",
+     "label": "Ânodos de Sacrifício (Zincos)",
+     "type": "select",
+     "options": [
+      "Trocados (100% novos)",
+      "Troca parcial",
+      "Não trocados (Em bom estado)"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "O zinco velho vai para o lixo e o novo fica embaixo d'água. Passada a docagem, não há como verificar se a troca foi total, parcial ou nenhuma — é prova que não se refaz. Select de 3 opções."
+    },
+    {
+     "key": "observacao",
+     "label": "Observações de casco, costado e fundo",
+     "type": "textarea",
+     "options": null,
+     "placeholder": "Descreva a espessura da tinta antiga, se houve bolhas de osmose tratadas, estado dos eixos/hélices antes da limpeza...",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Único lugar para bolha de osmose tratada, espessura da tinta antiga e estado de eixo/hélice antes da limpeza — tudo some sob a tinta nova e sob a água. Fica no barco, mas opcional e sem trava: mão suja pula, quem viu algo grave escreve ou dita."
+    }
+   ],
+   "evidencias": [
+    {
+     "key": "foto_seco",
+     "label": "Foto do fundo da embarcação no seco",
+     "quando": "sempre — trava o registro. É a prova que não se refaz: fundo e quilha só existem para a câmera enquanto o barco está içado."
+    },
+    {
+     "key": "nota_fiscal",
+     "label": "Nota fiscal do serviço",
+     "quando": "requiredIf valor preenchido — como valor foi para a gaveta, a trava dispara na revisão do escritório, junto do documento. O colaborador de chão não fica parado no pier esperando papel que ainda não existe."
+    }
+   ]
+  },
+  "interior": {
+   "verificado": false,
+   "campos": [
+    {
+     "key": "servico",
+     "label": "Serviço executado",
+     "type": "text",
+     "options": null,
+     "placeholder": "Ex: Higienização de estofados e revisão do ar condicionado",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Só quem estava na cabine sabe o que foi feito; depois vira 'manutenção interna' genérica e o histórico perde valor."
+    },
+    {
+     "key": "status",
+     "label": "Status de conservação interna",
+     "type": "select",
+     "options": [
+      "Excelente",
+      "Bom / Operacional",
+      "Atenção (Pontos de mofo/desgaste)",
+      "Crítico"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É julgamento do estado no momento da visita (mofo, desgaste). Uma semana depois o interior já mudou e ninguém refaz essa leitura."
+    },
+    {
+     "key": "responsavel",
+     "label": "Responsável pelo serviço",
+     "type": "text",
+     "options": null,
+     "placeholder": "Nome do técnico ou marinheiro",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Quem pôs a mão no barco só é sabido na hora; digitação curta, cabe em uma mão. Reconstituir depois é memória, não registro."
+    },
+    {
+     "key": "data",
+     "label": "Data do serviço",
+     "type": "date",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É a data do que aconteceu, não a do lançamento. Se o escritório preencher na revisão, entra a data errada."
+    },
+    {
+     "key": "ar_condicionado_limpeza",
+     "label": "Higienização dos aparelhos de Ar Condicionado",
+     "type": "select",
+     "options": [
+      "Sim, filtros e bandejas limpos",
+      "Não realizado",
+      "N/A"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Filtro e bandeja limpos não deixam rastro depois da limpeza; ou se marca na hora, ou não se prova mais."
+    },
+    {
+     "key": "ar_condicionado_carga",
+     "label": "Carga de Gás e Climatização",
+     "type": "select",
+     "options": [
+      "Operando excelente (Gelando)",
+      "Fraco / Necessita carga",
+      "N/A"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É o resultado do teste feito com o aparelho ligado, no local. Fora do barco não se sabe se estava gelando."
+    },
+    {
+     "key": "dessalinizador_producao",
+     "label": "Vazão do Dessalinizador",
+     "type": "number",
+     "options": null,
+     "placeholder": "Capacidade real",
+     "suffix": "L/h",
+     "showIf": null,
+     "porque": "Leitura de instrumento medida com o equipamento rodando — exceção explícita do critério: instrumento é sempre barco."
+    },
+    {
+     "key": "dessalinizador_horas",
+     "label": "Horômetro do Dessalinizador",
+     "type": "number",
+     "options": null,
+     "placeholder": "Horas de uso",
+     "suffix": "h",
+     "showIf": null,
+     "porque": "Horímetro anda. O número do dia do serviço só existe no dia do serviço; três dígitos, toque curto."
+    },
+    {
+     "key": "sistema_esgoto_bombas",
+     "label": "Sistemas de Sanitário e Esgoto de Cabine",
+     "type": "select",
+     "options": [
+      "Todas as bombas e trituradores OK",
+      "Alguma bomba com falha",
+      "Avaria no vaso/sistema",
+      "N/A"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É teste de acionamento de bomba e triturador, feito a bordo. Não há papel no escritório que diga se a bomba respondeu."
+    },
+    {
+     "key": "estofados_telas",
+     "label": "Estado das Madeiras e Estofados internos",
+     "type": "select",
+     "options": [
+      "Perfeito estado (Sem avarias/mofo)",
+      "Desgaste natural de uso",
+      "Recomenda-se reforma/revestimento"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Avaliação visual e de tato do revestimento naquele dia; toque em uma de três opções, sem digitar."
+    },
+    {
+     "key": "observacao",
+     "label": "Observações de cabines, banheiros e cozinha de bordo",
+     "type": "textarea",
+     "options": null,
+     "placeholder": "Descreva a umidade interna, testes de fluxo do ar condicionado, limpeza das caixas de esgoto...",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Umidade, cheiro de mofo e fluxo de ar não aparecem na foto e o escritório não estava lá. Opcional e ditável — não trava o registro nem força digitação com a mão suja."
+    }
+   ],
+   "evidencias": [
+    {
+     "key": "foto_interior",
+     "label": "Foto geral das cabines / salão",
+     "quando": "sempre — required, trava o registro no barco"
+    },
+    {
+     "key": "nota_fiscal",
+     "label": "Nota fiscal do serviço",
+     "quando": "requiredIf valor preenchido — a trava não cai, ela muda de lugar: como 'valor' foi para a gaveta, a nota é cobrada na revisão do escritório, não no pier"
+    }
+   ]
+  },
+  "dossie": {
+   "verificado": false,
+   "campos": [
+    {
+     "key": "servico",
+     "label": "Serviço executado",
+     "type": "text",
+     "options": null,
+     "placeholder": "Ex: Revisão dos motores principais",
+     "suffix": null,
+     "showIf": null,
+     "porque": "É o fato do dia. Só quem executou sabe o que de fato foi feito; o escritório recebe papel, não a memória do serviço."
+    },
+    {
+     "key": "tipo",
+     "label": "Tipo",
+     "type": "select",
+     "options": [
+      "Preventiva",
+      "Corretiva",
+      "Emergencial",
+      "Vistoria"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Preventiva/corretiva/emergencial é julgamento de quem estava lá, e some depois. Custa um toque, sem digitação."
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "select",
+     "options": [
+      "Concluído",
+      "Pendente",
+      "Atenção"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Concluído/pendente/atenção é o estado em que o barco ficou ao sair da mão do colaborador. Um toque."
+    },
+    {
+     "key": "responsavel",
+     "label": "Responsável / quem executou",
+     "type": "text",
+     "options": null,
+     "placeholder": "Técnico responsável",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Quem pôs a mão. Passados dias ninguém reconstitui com segurança quem era o técnico do dia; pode vir pré-preenchido com o colaborador logado."
+    },
+    {
+     "key": "data",
+     "label": "Data do serviço",
+     "type": "date",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Data do fato, não do lançamento. Preenchida sozinha pelo aparelho; se sair da hora, vira a data da digitação no escritório."
+    },
+    {
+     "key": "hora",
+     "label": "Hora",
+     "type": "time",
+     "options": null,
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "Mesmo caso da data: o aparelho dá de graça e a hora real do serviço não se recupera depois."
+    },
+    {
+     "key": "local",
+     "label": "Local / oficina",
+     "type": "text",
+     "options": null,
+     "placeholder": "Onde foi feito",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Pier, pátio, berço, oficina — o colaborador está no lugar. Serviço feito na própria Marina não deixa rastro em papel nenhum."
+    },
+    {
+     "key": "horimetro",
+     "label": "Horímetro (horas de motor)",
+     "type": "number",
+     "options": null,
+     "placeholder": "Leitura no momento",
+     "suffix": "h",
+     "showIf": null,
+     "porque": "Exceção dura: leitura de instrumento. O horímetro anda; a leitura do momento do serviço não existe em lugar nenhum depois."
+    },
+    {
+     "key": "troca_peca",
+     "label": "Houve troca de peça?",
+     "type": "select",
+     "options": [
+      "Não",
+      "Sim"
+     ],
+     "placeholder": null,
+     "suffix": null,
+     "showIf": null,
+     "porque": "É a chave que arma as travas de evidência (foto da peça nova e da velha). Se não for respondida no local, as fotos obrigatórias nunca aparecem."
+    },
+    {
+     "key": "peca_descricao",
+     "label": "Peça trocada",
+     "type": "text",
+     "options": null,
+     "placeholder": "Ex: Bomba de água do mar",
+     "suffix": null,
+     "showIf": {
+      "key": "troca_peca",
+      "equals": "Sim"
+     },
+     "porque": "A peça velha vai para o lixo. O que foi trocado só é identificável com ela na mão; pai (troca_peca) também está no barco."
+    },
+    {
+     "key": "observacao",
+     "label": "Observações",
+     "type": "textarea",
+     "options": null,
+     "placeholder": "Detalhes, contexto, pontos de atenção...",
+     "suffix": null,
+     "showIf": null,
+     "porque": "Único canal do que o colaborador viu e não cabe em campo fechado (folga, corrosão, ponto de atenção). O escritório não tem como inventar isso. Opcional, para não travar a mão suja."
+    }
+   ],
+   "evidencias": [
+    {
+     "key": "peca_nova",
+     "label": "Foto da peça NOVA",
+     "quando": "Obrigatória quando troca_peca = \"Sim\" (requiredIf). Tem de ser tirada no local, com a peça instalada/na mão."
+    },
+    {
+     "key": "peca_velha",
+     "label": "Foto da peça VELHA / removida",
+     "quando": "Obrigatória quando troca_peca = \"Sim\" (requiredIf). É a prova que não se refaz: a peça removida vai para o lixo no mesmo dia."
+    }
+   ]
+  }
+ }
+}
