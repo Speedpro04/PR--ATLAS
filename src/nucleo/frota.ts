@@ -21,6 +21,8 @@ export type Barco = {
   marca: string
   modelo: string
   ano: number
+  /** Comprimento em PES. No Atlas o campo `comprimento` ja e medido assim. */
+  pes: number | null
   motor: string | null
   motores: number | null
 }
@@ -75,15 +77,30 @@ function converter(a: any): Barco | null {
     marca: String(a.marca ?? ''),
     modelo: String(a.modelo ?? ''),
     ano: Number(a.ano_fabricacao) || 0,
+    pes: a.comprimento != null && Number(a.comprimento) > 0 ? Number(a.comprimento) : null,
     motor: a.modelo_motor ? String(a.modelo_motor) : null,
     motores: a.num_motores != null ? Number(a.num_motores) : null,
   }
 }
 
-/** Com nome primeiro, em ordem; os sem nome depois, pelo id. */
+/**
+ * Do maior para o menor, em pes.
+ *
+ * Numa marina o porte e como se fala do barco — "o 74 pes" identifica melhor
+ * que um nome que o colaborador talvez nao saiba de cor. Sem medida cadastrada
+ * o ativo vai para o fim: melhor do que fingir que tem zero pe.
+ */
 function ordenar(a: Barco, b: Barco): number {
-  if (!!a.nome !== !!b.nome) return a.nome ? -1 : 1
+  if ((a.pes ?? 0) !== (b.pes ?? 0)) return (b.pes ?? 0) - (a.pes ?? 0)
   return rotularBarco(a).localeCompare(rotularBarco(b), 'pt-BR')
+}
+
+/** "74 pés" — ou nada, quando a medida nao foi cadastrada. */
+export function tamanhoEmPes(b: Barco): string | null {
+  if (!b.pes) return null
+  // 74 sai "74"; 45.5 sai "45,5". Pe quebrado existe e nao pode virar 46.
+  const n = Number.isInteger(b.pes) ? String(b.pes) : b.pes.toFixed(1).replace('.', ',')
+  return `${n} pés`
 }
 
 export async function acharBarco(id: string): Promise<Barco | null> {

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ClipboardCheck, FileText, Ship } from 'lucide-react'
-import { acharBarco, descreverBarco, rotularBarco, type Barco } from '../nucleo/frota'
+import { acharBarco, descreverBarco, rotularBarco, tamanhoEmPes, type Barco } from '../nucleo/frota'
 import { MARINA, type Sessao } from '../nucleo/sessao'
 
 /**
@@ -46,7 +46,7 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
       <div className="min-h-[100dvh] flex items-center justify-center px-6">
         <div className="text-center">
           <p className="text-white/30 text-[10px] uppercase tracking-[0.3em] font-black">
-            Barco não encontrado
+            Ativo não encontrado
           </p>
           <button onClick={() => navegar('/')} className="btn-secundario mt-8">
             Voltar
@@ -57,12 +57,14 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
   }
 
   const linhas: Array<[string, string]> = [
-    ['Barco', rotularBarco(barco)],
+    ['Ativo', rotularBarco(barco)],
     // Sem o ano: ele ja tem linha propria, e "Sunseeker Predator 74 · 2022"
     // quebra em 375px deixando o "· 2022" orfao na segunda linha.
     ['Embarcação', descreverBarco(barco)],
+    // O porte e como se fala do barco na marina — vem antes do ano.
+    ['Porte', tamanhoEmPes(barco) ?? '—'],
     ['Ano', String(barco.ano)],
-    ['Ativo', barco.id],
+    ['ID', barco.id],
     ['Motor', barco.motor ? `${barco.motor}${barco.motores ? ` · ${barco.motores}x` : ''}` : '—'],
     // O nome do colaborador so existe quando a E2-a criar o cadastro dele; o
     // /auth/login devolve apenas o id. Ate la vale a matricula, que e o que
@@ -82,10 +84,10 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
           className="flex items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-white/30 font-black py-3 hover:text-white/60 transition-colors"
         >
           <ArrowLeft size={14} />
-          Trocar barco
+          Trocar ativo
         </button>
         <div className="flex items-center gap-3 mt-4 mb-2">
-          <Ship size={20} className="text-white/30" />
+          <Ship size={20} className="text-[#c5a059]" />
           <h1 className="text-3xl md:text-4xl font-serif font-bold text-white">
             {rotularBarco(barco)}
           </h1>

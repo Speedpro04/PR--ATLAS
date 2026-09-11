@@ -7,6 +7,7 @@ import {
   frotaGuardada,
   rotularBarco,
   sincronizarFrota,
+  tamanhoEmPes,
   type Barco,
 } from '../nucleo/frota'
 import { encerrarSessao, MARINA, type Sessao } from '../nucleo/sessao'
@@ -84,9 +85,9 @@ export default function EscolherBarco({
         <div className="flex items-start justify-between gap-4 pb-8 border-b border-white/5">
           <div className="min-w-0">
             <div className="flex items-center gap-3 mb-2">
-              <Anchor size={20} className="text-white/30 shrink-0" />
+              <Anchor size={20} className="text-[#c5a059] shrink-0" />
               <h1 className="text-3xl md:text-4xl font-serif font-bold text-white">
-                Qual barco?
+                Qual ativo?
               </h1>
             </div>
             {/* Duas linhas de proposito no celular: "MATRICULA 4471" com
@@ -139,7 +140,7 @@ export default function EscolherBarco({
               className="campo pl-14"
               value={termo}
               onChange={(e) => setTermo(e.target.value)}
-              placeholder="Nome, marca ou modelo"
+              placeholder="Nome, marca, modelo ou ID"
               autoCorrect="off"
               spellCheck={false}
             />
@@ -156,8 +157,8 @@ export default function EscolherBarco({
           <div className="text-center py-24 bg-white/[0.01] border border-white/5 rounded-sm px-6">
             <p className="text-white/30 text-[10px] uppercase tracking-[0.3em] font-black leading-relaxed">
               {frota!.length === 0
-                ? 'Nenhum barco no aparelho'
-                : 'Nenhum barco com esse nome'}
+                ? 'Nenhum ativo no aparelho'
+                : 'Nenhum ativo com esse nome'}
             </p>
             {frota!.length === 0 && (
               <>
@@ -187,8 +188,17 @@ export default function EscolherBarco({
                 >
                   <div className="flex items-center justify-between mb-3">
                     <Anchor size={20} className="text-[#c5a059]" />
-                    <span className="text-[8px] uppercase tracking-widest text-white/30">
-                      {b.ano || '—'}
+                    {/* Porte em destaque, ano discreto: numa marina o barco e
+                        "o 74 pes" antes de ser "o de 2022". */}
+                    <span className="text-right leading-tight">
+                      {tamanhoEmPes(b) && (
+                        <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-[#c5a059]">
+                          {tamanhoEmPes(b)}
+                        </span>
+                      )}
+                      <span className="block text-[8px] uppercase tracking-widest text-white/30">
+                        {b.ano || '—'}
+                      </span>
                     </span>
                   </div>
                   <div className="text-xl font-bold text-white">{rotularBarco(b)}</div>
