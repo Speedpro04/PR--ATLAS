@@ -14,7 +14,7 @@
  * `created_by` que o backend grava a partir do token, nao o que esta aqui.
  */
 
-import { entrar as apiEntrar } from './api'
+import { entrar as apiEntrar, meusDados } from './api'
 import { limparTudo } from './db'
 
 const CHAVE = 'atlas-pre-data:sessao'
@@ -51,6 +51,14 @@ export type Sessao = {
   matricula: string
   /** Id do usuario no Atlas. E ele que vira `created_by` no registro. */
   usuarioId: string
+  /**
+   * Nome de gente, para o painel nao mostrar uuid nem e-mail.
+   *
+   * Vem do `user_metadata` do Supabase via /auth/me. Pode faltar — conta sem
+   * nome cadastrado existe — e ai o app cai no identificador, que ao menos e
+   * legivel.
+   */
+  nome?: string
   token: string
   tokenRenovacao: string
   /** ISO. A sessao dura 7 dias (PRD 3.1). */
@@ -110,6 +118,18 @@ export async function entrar(identificador: string, senha: string): Promise<Sess
     tokenRenovacao: r.refresh_token,
     entrouEm: new Date().toISOString(),
   }
+
+  // O nome e um extra: se o /auth/me falhar, a sessao vale do mesmo jeito.
+  // Barrar a entrada porque o nome nao veio seria trocar um detalhe de
+  // apresentacao pelo acesso inteiro.
+  try {
+    const eu = await meusDados(r.access_token)
+    const m = eu?.user_metadata ?? eu?.userMetadata ?? {}
+    s.nome = m.nome || m.full_name || m.name || eu?.nome || undefined
+  } catch {
+    /* segue sem nome */
+  }
+
   guardar(s)
   return s
 }
@@ -127,6 +147,10 @@ function guardar(s: Sessao): void {
  *
  * A frota e a lista de barcos de uma Marina; deixa-la no aparelho depois da
  * saida entregaria a carteira de clientes dela para o proximo que entrar.
+ *
+ * CUIDADO: isto apaga TAMBEM os rascunhos guardados. Quem chama precisa ter
+ * perguntado antes — ver `pendentesDeEnvio()`. Um toque sem querer no icone de
+ * sair nao pode custar o trabalho da manha de quem estava no pier.
  */
 export async function encerrarSessao(): Promise<void> {
   try {
@@ -152,8 +176,25 @@ export async function encerrarSessao(): Promise<void> {
 export function sessaoCaiu(): void {
   try {
     localStorage.removeItem(CHAVE)
+    // O motivo da queda precisa sobreviver ao recarregamento: em memoria, um
+    // F5 apaga o aviso e o colaborador ve um login limpo, sem saber por que
+    // voltou para la — e conclui que o app o deslogou sozinho, de graca.
+    localStorage.setItem(CHAVE_EXPIROU, '1')
   } catch {
     /* idem */
+  }
+}
+
+const CHAVE_EXPIROU = 'atlas-pre-data:expirou'
+
+/** Leu o aviso? Ele se apaga — vale para a proxima entrada, nao para sempre. */
+export function consumirAvisoDeExpiracao(): boolean {
+  try {
+    const tem = localStorage.getItem(CHAVE_EXPIROU) === '1'
+    if (tem) localStorage.removeItem(CHAVE_EXPIROU)
+    return tem
+  } catch {
+    return false
   }
 }
 

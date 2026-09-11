@@ -115,6 +115,17 @@ export type Rascunho = {
   /** Quem capturou — a matricula, nao o uuid. */
   matricula: string
   usuarioId: string
+  /** Nome de quem esta com o aparelho na mao, vindo da sessao. */
+  registradoPor: string
+  /**
+   * Quem executou o servico, quando NAO foi quem registrou.
+   *
+   * Na marina o mecanico faz e as vezes outra pessoa lanca — e para o
+   * escritorio essas duas respostas nao sao intercambiaveis: quem assina o
+   * registro e quem digitou, mas quem responde pelo servico e quem meteu a mao.
+   * Vazio significa "fui eu mesmo".
+   */
+  executadoPor: string
   /** Congelado na ABERTURA da ficha: e a hora do servico, nao a do envio. */
   abertoEm: string
   atualizadoEm: string
@@ -155,6 +166,7 @@ export function novoRascunho(
   categoria: CategoriaChave,
   matricula: string,
   usuarioId: string,
+  nome?: string,
 ): Rascunho {
   const agora = new Date().toISOString()
   return {
@@ -168,6 +180,8 @@ export function novoRascunho(
     observacao: '',
     matricula,
     usuarioId,
+    registradoPor: nome || matricula,
+    executadoPor: '',
     abertoEm: agora,
     atualizadoEm: agora,
     fotos: 0,
@@ -263,4 +277,14 @@ function temHorimetro(r: Rascunho): boolean {
   if (r.horimetro.trim()) return true
   const e = r.especificos || {}
   return CHAVES_HORIMETRO.some((k) => (e[k] ?? '').trim() !== '')
+}
+
+/**
+ * Rascunhos que ainda nao chegaram ao painel.
+ *
+ * E o que da peso ao aviso de saida: "voce tem 3 registros que ainda nao
+ * subiram" para quem esta prestes a apagar o aparelho.
+ */
+export async function pendentesDeEnvio(): Promise<Rascunho[]> {
+  return (await listarRascunhos()).filter((r) => !r.enviadoEm)
 }

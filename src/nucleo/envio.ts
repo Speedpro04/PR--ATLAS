@@ -50,7 +50,13 @@ function montarDados(r: Rascunho, fotos: number) {
     origem: 'atlas-pre-data',
     client_id: r.clientId,
     capturado_em: r.abertoEm,
-    capturado_por: r.matricula,
+    // Dois nomes, e a diferenca entre eles importa para quem revisa:
+    // `registrado_por` assina o lancamento, `executado_por` responde pelo
+    // servico. Iguais quando o proprio mecanico lanca — e ai `executado_por`
+    // repete o nome em vez de ficar vazio, para o painel nao precisar deduzir.
+    registrado_por: r.registradoPor || r.matricula,
+    executado_por: (r.executadoPor || '').trim() || r.registradoPor || r.matricula,
+    registrado_por_login: r.matricula,
     fotos_no_aparelho: fotos,
   }
 }

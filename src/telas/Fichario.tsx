@@ -8,8 +8,8 @@ import {
 import { acharBarco, descreverBarco, rotularBarco, tamanhoEmPes, type Barco } from '../nucleo/frota'
 import { identificadorCurto, MARINA, type Sessao } from '../nucleo/sessao'
 import {
-  CATEGORIAS, CONDICOES, acharCategoria, apagarFoto, faltaNoRascunho,
-  fotosDoRascunho, guardarFoto, lerRascunho, novoRascunho, salvarRascunho,
+  CATEGORIAS, CONDICOES, acharCategoria, apagarFoto, descartarRascunho, faltaNoRascunho,
+  fotosDoRascunho, guardarFoto, lerRascunho, novoRascunho, rascunhosDoAtivo, salvarRascunho,
   type CategoriaChave, type Foto, type Rascunho,
 } from '../nucleo/rascunho'
 import { camposDaCategoria, campoVisivel, type CampoRecorte } from '../nucleo/recorte'
@@ -47,6 +47,7 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
   const [fotos, setFotos] = useState<Foto[]>([])
   const [salvo, setSalvo] = useState(false)
   const [envio, setEnvio] = useState<ResultadoEnvio | null>(null)
+  const [retomado, setRetomado] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
   const entradaFoto = useRef<HTMLInputElement>(null)
 
@@ -59,11 +60,38 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
     }
   }, [id])
 
+  /**
+   * Retoma o registro que ficou aberto neste ativo.
+   *
+   * O rascunho e gravado a cada tecla, mas a TELA vivia so na memoria: bastava
+   * o celular bloquear, o app ir para segundo plano ou a pagina recarregar para
+   * o colaborador voltar na escolha de categoria, achando que perdeu tudo — com
+   * o texto dele inteiro guardado no aparelho, invisivel.
+   *
+   * Retoma so o que ainda nao subiu: registro ja enviado ao painel esta
+   * terminado, e reabri-lo faria o proximo servico nascer por cima do anterior.
+   */
+  useEffect(() => {
+    let vivo = true
+    if (!id) return
+    const ativo = decodeURIComponent(id)
+    rascunhosDoAtivo(ativo).then(async (lista) => {
+      const aberto = lista.find((r) => !r.enviadoEm)
+      if (!vivo || !aberto) return
+      setRascunho(aberto)
+      setFotos(await fotosDoRascunho(aberto.id))
+      setRetomado(true)
+    })
+    return () => {
+      vivo = false
+    }
+  }, [id])
+
   const abertura = useMemo(() => new Date(), [])
 
   async function escolherCategoria(chave: CategoriaChave) {
     if (!barco) return
-    const r = novoRascunho(barco.id, chave, sessao.matricula, sessao.usuarioId)
+    const r = novoRascunho(barco.id, chave, sessao.matricula, sessao.usuarioId, sessao.nome)
     setRascunho(r)
     await salvarRascunho(r)
   }
@@ -153,7 +181,17 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
     <div className="min-h-[100dvh] p-4 md:p-8 pb-40 topo-seguro">
       <header className="pb-6 border-b border-white/5">
         <button
-          onClick={() => (rascunho ? setRascunho(null) : navegar('/'))}
+          onClick={async () => {
+            if (!rascunho) return navegar('/')
+            // Sem nada preenchido, trocar de servico apaga o rascunho vazio em
+            // vez de deixar lixo que seria "retomado" na proxima visita.
+            if (!rascunho.servico.trim() && !rascunho.fotos) {
+              await descartarRascunho(rascunho.id)
+            }
+            setRascunho(null)
+            setFotos([])
+            setRetomado(false)
+          }}
           className="flex items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-white/30 font-black py-3 hover:text-white/60 transition-colors"
         >
           <ArrowLeft size={14} />
@@ -208,6 +246,24 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
       ) : (
         /* ───────── passos 2 e 3: foto e dados ───────── */
         <main className="py-8 space-y-8 md:grid md:grid-cols-2 md:gap-8 md:space-y-0 md:items-start">
+          {retomado && envio?.estado !== 'enviado' && (
+            <div className="md:col-span-2 border border-[#c5a059]/25 bg-[#c5a059]/[0.04] rounded-sm px-5 py-4 flex flex-wrap items-center gap-4">
+              <p className="text-white/70 text-sm flex-1 min-w-[200px]">
+                Retomei o registro que você tinha começado aqui.
+              </p>
+              <button
+                onClick={async () => {
+                  await descartarRascunho(rascunho.id)
+                  setRascunho(null)
+                  setFotos([])
+                  setRetomado(false)
+                }}
+                className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 hover:text-white/80 px-4 py-3"
+              >
+                Descartar e começar outro
+              </button>
+            </div>
+          )}
           {/* FOTO PRIMEIRO. Ver o comentario do topo: e a unica coisa desta
               tela que nao se refaz no escritorio. */}
           <section className="bg-white/[0.02] border border-white/5 p-6 rounded-sm">
@@ -277,6 +333,27 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
                 placeholder="Ex: troquei o óleo do motor de bombordo"
                 autoCapitalize="sentences"
               />
+            </div>
+
+            <div>
+              <label htmlFor="executou" className="rotulo mb-3">
+                Quem executou
+              </label>
+              <input
+                id="executou"
+                className="campo"
+                value={rascunho.executadoPor}
+                onChange={(e) => mudar({ executadoPor: e.target.value })}
+                placeholder={rascunho.registradoPor || 'Você mesmo'}
+                autoCapitalize="words"
+              />
+              {/* O padrao e "fui eu": deixar vazio ja responde a pergunta. O
+                  campo existe porque na marina o mecanico faz e as vezes outra
+                  pessoa lanca — e para o escritorio nao e a mesma coisa. */}
+              <p className="text-white/25 text-[9px] uppercase tracking-widest mt-2 leading-relaxed">
+                Deixe vazio se foi você · registrado por{' '}
+                {rascunho.registradoPor || sessao.matricula}
+              </p>
             </div>
 
             {/* Campos proprios da categoria. So aparecem nas que passaram pelo
@@ -357,7 +434,7 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
 
             {/* O que o app ja sabe, pequeno: e conferencia, nao trabalho. */}
             <p className="text-[9px] text-white/30 uppercase tracking-widest leading-relaxed border-t border-white/5 pt-5">
-              {identificadorCurto(sessao.matricula)} · {MARINA}
+              {sessao.nome || identificadorCurto(sessao.matricula)} · {MARINA}
               <br />
               {abertura.toLocaleDateString('pt-BR')} às{' '}
               {abertura.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}

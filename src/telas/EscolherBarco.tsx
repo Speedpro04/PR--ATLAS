@@ -11,6 +11,7 @@ import {
   type Barco,
 } from '../nucleo/frota'
 import { encerrarSessao, identificadorCurto, MARINA, type Sessao } from '../nucleo/sessao'
+import { pendentesDeEnvio } from '../nucleo/rascunho'
 
 /**
  * Tela 2 — Escolher o barco (PRD secao 6).
@@ -37,6 +38,8 @@ export default function EscolherBarco({
   const [termo, setTermo] = useState('')
   const [frota, setFrota] = useState<Barco[] | null>(null)
   const [atualizando, setAtualizando] = useState(false)
+  /** null = ninguem pediu para sair. Numero = quantos rascunhos morreriam. */
+  const [confirmandoSaida, setConfirmandoSaida] = useState<number | null>(null)
 
   // Passo 1: o que ja esta no aparelho, imediatamente.
   useEffect(() => {
@@ -105,7 +108,7 @@ export default function EscolherBarco({
                 className="block md:inline tracking-[0.25em] md:tracking-[0.4em]"
                 title={sessao.matricula}
               >
-                {identificadorCurto(sessao.matricula)}
+                {sessao.nome || identificadorCurto(sessao.matricula)}
               </span>
             </p>
           </div>
@@ -113,10 +116,7 @@ export default function EscolherBarco({
           {/* Sair nao e a acao desta tela — escolher o barco e. No celular vira
               icone, para nao ficar maior que os proprios barcos. */}
           <button
-            onClick={async () => {
-              await encerrarSessao()
-              aoSair()
-            }}
+            onClick={async () => setConfirmandoSaida((await pendentesDeEnvio()).length)}
             aria-label="Sair"
             className="shrink-0 flex items-center justify-center gap-3 rounded-sm border border-white/10 text-white/40 px-4 md:px-8 text-[10px] font-black uppercase tracking-[0.3em] transition-colors hover:text-white/80 hover:border-white/20"
             style={{ minHeight: 'var(--toque-min)', minWidth: 'var(--toque-min)' }}
@@ -147,6 +147,49 @@ export default function EscolherBarco({
           </div>
         </div>
       </header>
+
+      {/* Sair apaga o aparelho inteiro — frota E rascunhos. E um icone no canto
+          onde o polegar passa, entao precisa perguntar; e se houver coisa por
+          enviar, precisa DIZER quanta. */}
+      {confirmandoSaida !== null && (
+        <div className="mt-6 border border-[#c5a059]/30 bg-[#c5a059]/[0.04] rounded-sm p-6">
+          <p className="text-white text-base font-bold mb-2">Sair do aparelho?</p>
+          <p className="text-white/50 text-sm leading-relaxed mb-6">
+            {confirmandoSaida > 0 ? (
+              <>
+                Você tem{' '}
+                <span className="text-[#c5a059] font-bold">
+                  {confirmandoSaida} {confirmandoSaida === 1 ? 'registro' : 'registros'} que
+                  ainda não {confirmandoSaida === 1 ? 'subiu' : 'subiram'}
+                </span>{' '}
+                para o painel. Sair apaga {confirmandoSaida === 1 ? 'ele' : 'eles'} e as fotos
+                junto — não dá para recuperar depois.
+              </>
+            ) : (
+              'A frota baixada sai do aparelho. Nada por enviar será perdido.'
+            )}
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setConfirmandoSaida(null)}
+              className="flex-1 min-w-[140px] rounded-sm bg-[#c5a059] text-[#010c20] px-6 text-[10px] font-black uppercase tracking-[0.3em]"
+              style={{ minHeight: 'var(--toque-min)' }}
+            >
+              Continuar aqui
+            </button>
+            <button
+              onClick={async () => {
+                await encerrarSessao()
+                aoSair()
+              }}
+              className="flex-1 min-w-[140px] rounded-sm border border-white/15 text-white/50 px-6 text-[10px] font-black uppercase tracking-[0.3em] hover:text-white/80"
+              style={{ minHeight: 'var(--toque-min)' }}
+            >
+              Sair mesmo assim
+            </button>
+          </div>
+        </div>
+      )}
 
       <main>
         {carregando ? (

@@ -247,3 +247,15 @@ export async function enviarFoto(
     headers: { 'Content-Type': undefined as unknown as string },
   })
 }
+
+/**
+ * Quem esta logado, segundo o Atlas.
+ *
+ * Serve para uma coisa so: descobrir o NOME. O painel recebia
+ * "kd3online@gmail.com" e um uuid no `created_by`, e ninguem no escritorio sabe
+ * quem e isso — pre-dado sem nome de gente nao responde a primeira pergunta que
+ * o revisor faz, que e "quem registrou isto?".
+ */
+export async function meusDados(token: string): Promise<any> {
+  return chamar('/auth/me', { token })
+}

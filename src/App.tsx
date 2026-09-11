@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import Login from './telas/Login'
 import EscolherBarco from './telas/EscolherBarco'
 import Fichario from './telas/Fichario'
-import { sessaoAtual, sessaoCaiu, type Sessao } from './nucleo/sessao'
+import { consumirAvisoDeExpiracao, sessaoAtual, sessaoCaiu, type Sessao } from './nucleo/sessao'
 import { aoCairSessao } from './nucleo/api'
 import { migrarBancosAntigos } from './nucleo/db'
 
@@ -16,7 +16,7 @@ function Porteiro({ sessao, children }: { sessao: Sessao | null; children: JSX.E
 
 export default function App() {
   const [sessao, setSessao] = useState<Sessao | null>(() => sessaoAtual())
-  const [expirou, setExpirou] = useState(false)
+  const [expirou, setExpirou] = useState(() => consumirAvisoDeExpiracao())
 
   /**
    * Token vencido derruba para o login — em UM lugar so.
