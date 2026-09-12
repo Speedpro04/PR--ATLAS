@@ -30,8 +30,16 @@ FROM nginx:1.27-alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 
-# Para onde o /api aponta. O EasyPanel injeta o endereço do serviço do Atlas;
-# o padrão serve para um docker-compose local na mesma rede.
+# Para onde o /api aponta — DEFINA no EasyPanel.
+#
+# Aceita as duas formas: o nome interno do serviço do Atlas
+# (ex.: http://nome-do-servico:8080) ou a URL pública
+# (ex.: https://yachtsatlas.online).
+#
+# O padrão abaixo é só um marcador. Com ele, o app SOBE e serve normalmente —
+# o nginx resolve o endereço a cada requisição, não na subida — e apenas as
+# chamadas de API falham, que é o caso que a tela já sabe tratar. Antes desta
+# mudança o contêiner nem iniciava: `host not found in upstream`.
 ENV ATLAS_API=http://atlas-backend:8080
 ENV PORT=80
 

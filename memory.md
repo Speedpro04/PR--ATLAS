@@ -484,8 +484,19 @@ O repo nasceu **sem Dockerfile** e o primeiro deploy falhou com
 12/09/2026: build do Vite e nginx servindo o estático.
 
 **O EasyPanel precisa de uma variável: `ATLAS_API`**, apontando para o backend
-do Atlas (ex.: `http://atlas-backend:8080` na rede interna, ou a URL pública).
-Sem ela o proxy sobe com o padrão e o app não fala com o Atlas.
+do Atlas. Aceita o nome interno do serviço (`http://nome-do-servico:8080`) ou a
+URL pública (`https://yachtsatlas.online`) — o `nginx.conf` manda `Host` do
+destino e liga SNI, então serve para as duas.
+
+**O primeiro contêiner subiu e morreu em loop:** `host not found in upstream
+"atlas-backend"`. Com o endereço escrito direto no `proxy_pass`, o nginx resolve
+o DNS **na subida** e recusa iniciar se não encontrar — um PWA offline-first que
+não abre porque a API sumiu é o oposto do que ele promete. Agora o endereço passa
+por uma variável (`set $atlas`), o que adia a resolução para cada requisição: o
+app sobe, serve o shell, e só as chamadas de API falham enquanto o backend
+estiver fora. O `resolver` vem do `${NGINX_LOCAL_RESOLVERS}` que o próprio
+entrypoint da imagem define — sem chumbar `127.0.0.11`, que só vale em rede
+Docker padrão.
 
 Três coisas do `nginx.conf` que parecem detalhe e não são:
 
