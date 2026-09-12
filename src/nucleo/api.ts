@@ -235,7 +235,16 @@ export async function enviarFoto(
   const corpo = new FormData()
   corpo.append('file', arquivo, nome)
 
-  const busca = new URLSearchParams({ tipo: meta.tipo, categoria: meta.categoria })
+  // PENDENTE DE REVISAO, sempre. A foto tirada no pier chega antes de qualquer
+  // conferencia: sem esta marca ela entra no Atlas como documento conferido,
+  // some da aba Pre-Data (que lista so o que esta pendente) e vai parar no
+  // dossie sem ninguem ter olhado. O parametro existe no backend exatamente
+  // para isto e nunca era enviado — a trava estava pronta e desligada.
+  const busca = new URLSearchParams({
+    tipo: meta.tipo,
+    categoria: meta.categoria,
+    pendente_revisao: 'true',
+  })
   if (meta.descricao) busca.set('descricao', meta.descricao)
 
   return chamar(`/documentos/upload/${encodeURIComponent(ativoId)}?${busca}`, {

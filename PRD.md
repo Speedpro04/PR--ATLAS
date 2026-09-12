@@ -837,6 +837,39 @@ alteração de schema do projeto. Não é — a da E2-a vem antes e é maior.
 
 ---
 
+## 12.1 A foto subia como conferida — 12/09/2026
+
+Teste do fundador no Android: enviou o serviço com fotos e disse *"as imagens não
+foram"*. Metade disso era verdade, e a outra metade era pior.
+
+**O que realmente acontecia com a foto que SUBIU:** ela ia sem
+`pendente_revisao=true`, então o Atlas a gravava como `status: verified` —
+documento conferido. Duas consequências: a aba Pré-Data, que lista só o que está
+**pendente**, não mostrava a foto (daí "não foram"); e o dossiê passava a
+incluí-la sem ninguém ter olhado, que é exatamente o que o conserto do dia
+anterior no Atlas (`bc19cec`) existia para impedir. O parâmetro estava pronto no
+backend, com a docstring dizendo "existe para o Atlas Pré-Data", e este app nunca
+o enviou: **a trava estava instalada e desligada**.
+
+O conserto é uma linha em `enviarFoto` (`src/nucleo/api.ts`): o upload passa a
+mandar `pendente_revisao=true` sempre. Não há caso em que foto de píer deva
+entrar conferida — quem confere é o escritório, depois.
+
+**O que ficou em aberto, e é outro defeito:** no envio das 20:39 (embarcação
+`YA-IATE-2015-3A38`, "troca do mouse"), o rascunho chegou declarando
+`fotos_no_aparelho: 1` e **nenhuma foto chegou**. Os logs do Supabase mostram
+`POST registros_rascunho 201` e nada depois — nenhuma chamada de upload atingiu o
+backend. Como `fotos_no_aparelho` vem de `fotos.length`, havia uma foto na loja
+do IndexedDB e o laço deveria tê-la enviado; a requisição morreu antes de sair do
+aparelho. No teste da manhã o padrão foi o mesmo em escala: 5 fotos na loja, **1**
+enviada, três tentativas seguidas subindo sempre a mesma primeira foto. Falta o
+que o app mostrou na tela para fechar a causa.
+
+**Dois efeitos colaterais já visíveis no banco**, que saem junto quando isso for
+consertado: o retry cria rascunho novo a cada tentativa (3 duplicados hoje), e a
+foto enviada com sucesso nunca é marcada — `f.enviada` é lido em `envio.ts` e
+**não é escrito em lugar nenhum do código**, então toda tentativa reenvia tudo.
+
 ## 13. Histórico
 
 - **10/09/2026** — v3. O usuário deixa de ser "o funcionário" genérico e vira o
