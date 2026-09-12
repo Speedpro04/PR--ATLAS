@@ -1,0 +1,24 @@
+# O que NÃO entra na imagem.
+#
+# Sem isto, o `COPY . .` leva o node_modules da máquina de quem buildou — com
+# binários compilados para outro sistema operacional — e o `npm ci` do estágio
+# anterior vira enfeite.
+node_modules
+dist
+dist-ssr
+dev-dist
+.vite
+
+.git
+.github
+
+# Documentação e ferramentas de desenvolvimento não vão para o contêiner.
+*.md
+.claude
+public/telas.html
+
+.env
+.env.*
+!.env.example
+
+.DS_Store

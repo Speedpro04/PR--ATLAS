@@ -471,3 +471,37 @@ inspeciona barco, ela guarda o que a Marina registrou.
 
 "Marina" é nome próprio no texto que o cliente lê; minúsculo só em código,
 e-mail e comentário.
+
+---
+
+## Deploy
+
+**Domínio: `pre-data.yachtsatlas.online`** (EasyPanel, projeto `bbbb`, serviço
+`atlas-pre`). Decidido em 12/09/2026.
+
+O repo nasceu **sem Dockerfile** e o primeiro deploy falhou com
+`failed to read dockerfile`. O Dockerfile e o `nginx.conf` entraram em
+12/09/2026: build do Vite e nginx servindo o estático.
+
+**O EasyPanel precisa de uma variável: `ATLAS_API`**, apontando para o backend
+do Atlas (ex.: `http://atlas-backend:8080` na rede interna, ou a URL pública).
+Sem ela o proxy sobe com o padrão e o app não fala com o Atlas.
+
+Três coisas do `nginx.conf` que parecem detalhe e não são:
+
+- **`/sw.js` e `/index.html` com `no-cache`.** É o service worker que decide o
+  que o app mostra offline; servido com cache, o navegador segue usando o shell
+  antigo por dias e a correção não chega ao píer. É a mesma armadilha que
+  custou uma rodada de "nada mudou" em desenvolvimento.
+- **`client_max_body_size 25m` e timeouts de 120s.** O padrão do nginx é 1 MB —
+  foto de celular tem 2-5 MB e falharia com 413 justamente nas fotos grandes,
+  que são as tiradas de perto. E wi-fi de marina é lento: sem o prazo maior o
+  nginx corta o upload no meio e o colaborador lê "erro ao enviar".
+- **`/api` por proxy, e não URL no bundle.** Mantém app e backend na mesma
+  origem para o navegador: sem CORS, e sem o endereço do servidor escrito no
+  código que roda no celular de terceiros.
+
+`public/telas.html` responde 404 em produção — é ferramenta de conferência.
+
+**Não foi possível provar o build:** Docker não está instalado na máquina do
+Marcos. O `npm run build` passa; o empacotamento só é validado no EasyPanel.
