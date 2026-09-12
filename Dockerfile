@@ -43,6 +43,18 @@ COPY nginx.conf /etc/nginx/templates/default.conf.template
 ENV ATLAS_API=http://atlas-backend:8080
 ENV PORT=80
 
+# Rede de seguranca para o `resolver` do nginx.
+#
+# O entrypoint da imagem (15-local-resolvers.envsh) define NGINX_LOCAL_RESOLVERS
+# a partir do /etc/resolv.conf, e normalmente e ele que vale. Mas se por algum
+# motivo esse script nao rodar, o envsubst substituiria a variavel por VAZIO e o
+# arquivo final ficaria com `resolver ;` — sintaxe invalida, e o nginx se recusa
+# a subir. Trocariamos um erro de DNS por um erro de sintaxe, que e pior porque
+# nao diz o que houve.
+#
+# 127.0.0.11 e o DNS interno do Docker; serve como ultimo recurso.
+ENV NGINX_LOCAL_RESOLVERS=127.0.0.11
+
 EXPOSE 80
 
 # A imagem do nginx já expande ${VARIAVEL} dos templates em /etc/nginx/templates
