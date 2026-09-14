@@ -896,6 +896,26 @@ renovação aqui e a revogação deixa de ser imediata.
 mesmo celular produzem registros indistinguíveis, e o nome que aparece no
 pré-dado segue sendo o que a pessoa digita. Identidade por pessoa é a E2-a.
 
+## 12.3 A entrada por conta da Marina saiu do app — 14/09/2026
+
+Horas depois de a entrada por código subir, o fundador viu a tela no celular e
+cortou o que sobrava: *"está aparecendo a opção de entrar no painel operacional,
+esse acesso não pode ter"*.
+
+Tinha razão. Eu havia deixado a entrada por conta atrás de um link, argumentando
+que o gerente também usa este app. O argumento não se sustenta — **o gerente gera
+um código para o próprio aparelho**. O que o link fazia, na prática, era manter
+viva a porta que o código veio fechar: bastava um colaborador pedir a senha uma
+vez para o risco inteiro voltar.
+
+Agora há **um caminho só**: código do aparelho. Saiu junto o resto de uma era
+anterior — matrícula que nunca existiu no banco, e-mail montado por baixo, senha
+que quem está no píer não deveria carregar.
+
+**Ficou o aviso de sessão vencida**, que antes não aparecia: sem ele, quem é
+derrubado pelo prazo de sete dias acha que errou o código e digita o mesmo cinco
+vezes.
+
 ## 13. Histórico
 
 - **10/09/2026** — v3. O usuário deixa de ser "o funcionário" genérico e vira o

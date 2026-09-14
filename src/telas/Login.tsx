@@ -1,15 +1,20 @@
 import { useState, type FormEvent } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
 import { FalhaApi } from '../nucleo/api'
 import { sincronizarFrota } from '../nucleo/frota'
-import { entrar, entrarComCodigo, MARINA, type Sessao } from '../nucleo/sessao'
+import { entrarComCodigo, MARINA, type Sessao } from '../nucleo/sessao'
 
 /**
- * Tela 1 — Login (PRD secao 6 e decisao 3.4).
+ * Tela 1 — Login.
  *
- * Matricula e senha, nao e-mail: o pessoal do chao nao tem e-mail corporativo,
- * mas todo mundo sabe a propria matricula. O endereco que o Supabase exige e
- * montado por baixo, em `sessao.ts`, e o colaborador nunca o ve.
+ * SÓ CÓDIGO DO APARELHO. Não há entrada por conta neste app, de propósito: a
+ * senha da Marina abre o painel inteiro — selar registro, emitir dossiê,
+ * liberar documento, ver a frota — e oferecer esse caminho aqui faria alguém
+ * pedir a senha mais cedo ou mais tarde. Quem precisa entrar, inclusive a
+ * gerente, gera um código para o próprio aparelho.
+ *
+ * Some com isso o problema que a versão anterior arrastava: matrícula que não
+ * existe no banco, e-mail montado por baixo, senha que o colaborador não
+ * deveria ter.
  *
  * Entrar tambem BAIXA A FROTA. E o unico momento garantido com rede — depois
  * disso o app tem que funcionar no pier. Se o download falhar, a sessao vale
@@ -21,44 +26,33 @@ export default function Login({
   expirou = false,
 }: {
   aoEntrar: (s: Sessao) => void
-  /** Chegou aqui porque o token venceu, nao porque quis sair. */
+  /** Chegou aqui porque a sessão venceu, não porque quis sair. */
   expirou?: boolean
 }) {
-  const [matricula, setMatricula] = useState('')
-  const [senha, setSenha] = useState('')
   const [codigo, setCodigo] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [entrando, setEntrando] = useState(false)
-  const [mostrarSenha, setMostrarSenha] = useState(false)
-  // O CÓDIGO É O CAMINHO PADRÃO, e a conta da Marina fica atrás de um link.
+  // SÓ CÓDIGO. Não há entrada por conta neste app, de propósito.
   //
-  // Quem está no píer não deve carregar a senha que abre o painel inteiro: com
-  // ela dá para selar registro, emitir dossiê e ver a frota toda. O código faz
-  // só o trabalho dele — mandar serviço e foto — e a Marina revoga quando
-  // quiser. A entrada por conta continua existindo porque o gerente também usa
-  // este app, e ele precisa do próprio acesso.
-  const [modo, setModo] = useState<'codigo' | 'conta'>('codigo')
+  // A senha da Marina abre o painel inteiro — selar registro, emitir dossiê,
+  // liberar documento, ver a frota. Oferecer esse caminho aqui faria alguém
+  // pedir a senha mais cedo ou mais tarde, e o risco voltaria pela porta que
+  // nós mesmos deixamos aberta. Quem precisa entrar — inclusive a gerente —
+  // gera um código para o próprio aparelho.
 
   async function submeter(e: FormEvent) {
     e.preventDefault()
     if (entrando) return
 
-    if (modo === 'codigo') {
-      if (!codigo.trim()) {
-        setErro('Digite o código do aparelho.')
-        return
-      }
-    } else if (!matricula.trim() || !senha) {
-      setErro('Preencha matrícula e senha.')
+    if (!codigo.trim()) {
+      setErro('Digite o código do aparelho.')
       return
     }
 
     setErro(null)
     setEntrando(true)
     try {
-      const sessao = modo === 'codigo'
-        ? await entrarComCodigo(codigo)
-        : await entrar(matricula, senha)
+      const sessao = await entrarComCodigo(codigo)
 
       // Falha aqui nao derruba o login — ver o comentario do topo. A tela da
       // frota avisa quando esta vazia, e tenta de novo sozinha.
@@ -108,8 +102,6 @@ export default function Login({
           {/* O CÓDIGO DO APARELHO é o caminho padrão. Um campo só, sem senha
               para decorar e sem conta para carregar no bolso — e, do outro
               lado, um acesso que não abre o painel da Marina. */}
-          {modo === 'codigo' ? (
-            <>
               <div className="group">
                 <label htmlFor="codigo" className="rotulo mb-3">
                   Código do aparelho
@@ -128,6 +120,13 @@ export default function Login({
                   A Marina gera este código no painel e entrega a você. Com ele dá
                   para registrar serviço e foto — nada além disso.
                 </p>
+                {/* Sem esta linha, quem foi derrubado pelo vencimento acha que
+                    errou o código — e digita o mesmo cinco vezes. */}
+                {expirou && (
+                  <p className="dica mt-2 text-[#e5d5b7]">
+                    Sua sessão venceu. Digite o mesmo código para continuar.
+                  </p>
+                )}
               </div>
 
               <button type="submit" className="btn-primario" disabled={entrando}>
@@ -135,106 +134,6 @@ export default function Login({
               </button>
 
               {erro && <p className="erro">{erro}</p>}
-
-              <button
-                type="button"
-                onClick={() => { setModo('conta'); setErro(null) }}
-                className="w-full text-center text-white/35 text-[11px] uppercase tracking-widest font-bold pt-2"
-              >
-                Entrar com conta da Marina
-              </button>
-            </>
-          ) : (
-          <>
-          <div className="group">
-            {/* PROVISORIO ate a E2-a.
-                O cadastro de colaborador (nome, matricula, telefone) e trabalho
-                do repo do Atlas e ainda nao existe, entao NAO HA matricula no
-                banco para ninguem digitar. Ate la o campo aceita os dois, e o
-                rotulo precisa dizer isso: campo que recusa o que o rotulo
-                promete faz quem esta entrando duvidar da propria senha.
-                Quando o cadastro existir, volta a ser so "Matricula" e a dica
-                abaixo sai. */}
-            <label htmlFor="matricula" className="rotulo mb-3">
-              Matrícula ou e-mail
-            </label>
-            <input
-              id="matricula"
-              className="campo"
-              value={matricula}
-              onChange={(e) => setMatricula(e.target.value)}
-              disabled={entrando}
-              placeholder="seu@email.com"
-              // `inputMode` e nao `type=number`: a matricula pode ganhar letra
-              // um dia, e teclado numerico e o que importa para o dedo.
-              // Enquanto a E2-a nao existe, o campo tambem aceita e-mail.
-              inputMode="email"
-              autoComplete="username"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-            />
-          </div>
-
-          <div className="group">
-            <label htmlFor="senha" className="rotulo mb-3">
-              Senha
-            </label>
-            {/* Ver a senha nao e conforto, e a diferenca entre errar e
-                desistir: com a mao suja, em pe e no sol, digitar errado e a
-                regra — e sem poder conferir, o colaborador culpa a propria
-                memoria e para de tentar. */}
-            <div className="relative">
-              <input
-                id="senha"
-                type={mostrarSenha ? 'text' : 'password'}
-                className="campo pr-16"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                disabled={entrando}
-                autoComplete="current-password"
-              />
-              <button
-                type="button"
-                onClick={() => setMostrarSenha((v) => !v)}
-                disabled={entrando}
-                aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
-                aria-pressed={mostrarSenha}
-                // Encostado na borda direita e com a altura toda do campo: o
-                // alvo tem 56px de lado, bem acima dos 44 do dedo.
-                className="absolute right-0 top-0 h-full w-14 flex items-center justify-center text-white/25 hover:text-[#c5a059] focus-visible:text-[#c5a059] transition-colors disabled:opacity-30"
-              >
-                {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-
-          {expirou && !erro && (
-            <p className="text-[#e5d5b7] text-sm leading-relaxed">
-              Sua sessão expirou. Entre de novo — o que você registrou continua
-              guardado no aparelho.
-            </p>
-          )}
-
-          {erro && (
-            <p role="alert" className="text-sm text-[#e5d5b7] leading-relaxed">
-              {erro}
-            </p>
-          )}
-
-          <button type="submit" className="btn-primario" disabled={entrando}>
-            {entrando ? 'Entrando…' : 'Entrar'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { setModo('codigo'); setErro(null) }}
-            className="w-full text-center text-white/35 text-[11px] uppercase tracking-widest font-bold"
-          >
-            Entrar com código do aparelho
-          </button>
-          </>
-          )}
 
           <p className="text-center text-[10px] uppercase tracking-[0.3em] text-white/20 font-black leading-relaxed">
             Você entra uma vez.
