@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { FalhaApi } from '../nucleo/api'
 import { sincronizarFrota } from '../nucleo/frota'
-import { entrar, MARINA, type Sessao } from '../nucleo/sessao'
+import { entrar, entrarComCodigo, MARINA, type Sessao } from '../nucleo/sessao'
 
 /**
  * Tela 1 — Login (PRD secao 6 e decisao 3.4).
@@ -26,14 +26,29 @@ export default function Login({
 }) {
   const [matricula, setMatricula] = useState('')
   const [senha, setSenha] = useState('')
+  const [codigo, setCodigo] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [entrando, setEntrando] = useState(false)
   const [mostrarSenha, setMostrarSenha] = useState(false)
+  // O CÓDIGO É O CAMINHO PADRÃO, e a conta da Marina fica atrás de um link.
+  //
+  // Quem está no píer não deve carregar a senha que abre o painel inteiro: com
+  // ela dá para selar registro, emitir dossiê e ver a frota toda. O código faz
+  // só o trabalho dele — mandar serviço e foto — e a Marina revoga quando
+  // quiser. A entrada por conta continua existindo porque o gerente também usa
+  // este app, e ele precisa do próprio acesso.
+  const [modo, setModo] = useState<'codigo' | 'conta'>('codigo')
 
   async function submeter(e: FormEvent) {
     e.preventDefault()
     if (entrando) return
-    if (!matricula.trim() || !senha) {
+
+    if (modo === 'codigo') {
+      if (!codigo.trim()) {
+        setErro('Digite o código do aparelho.')
+        return
+      }
+    } else if (!matricula.trim() || !senha) {
       setErro('Preencha matrícula e senha.')
       return
     }
@@ -41,7 +56,9 @@ export default function Login({
     setErro(null)
     setEntrando(true)
     try {
-      const sessao = await entrar(matricula, senha)
+      const sessao = modo === 'codigo'
+        ? await entrarComCodigo(codigo)
+        : await entrar(matricula, senha)
 
       // Falha aqui nao derruba o login — ver o comentario do topo. A tela da
       // frota avisa quando esta vazia, e tenta de novo sozinha.
@@ -88,6 +105,47 @@ export default function Login({
 
       <div className="w-full max-w-sm md:max-w-md deitado:flex-1 deitado:max-w-md">
         <form onSubmit={submeter} className="space-y-6 md:space-y-8 deitado:space-y-6">
+          {/* O CÓDIGO DO APARELHO é o caminho padrão. Um campo só, sem senha
+              para decorar e sem conta para carregar no bolso — e, do outro
+              lado, um acesso que não abre o painel da Marina. */}
+          {modo === 'codigo' ? (
+            <>
+              <div className="group">
+                <label htmlFor="codigo" className="rotulo mb-3">
+                  Código do aparelho
+                </label>
+                <input
+                  id="codigo"
+                  value={codigo}
+                  onChange={(e) => setCodigo(e.target.value.toUpperCase())}
+                  placeholder="ABCD-2345"
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  className="campo text-center tracking-[0.3em] text-xl"
+                />
+                <p className="dica mt-3">
+                  A Marina gera este código no painel e entrega a você. Com ele dá
+                  para registrar serviço e foto — nada além disso.
+                </p>
+              </div>
+
+              <button type="submit" className="btn-primario" disabled={entrando}>
+                {entrando ? 'Entrando…' : 'Entrar'}
+              </button>
+
+              {erro && <p className="erro">{erro}</p>}
+
+              <button
+                type="button"
+                onClick={() => { setModo('conta'); setErro(null) }}
+                className="w-full text-center text-white/35 text-[11px] uppercase tracking-widest font-bold pt-2"
+              >
+                Entrar com conta da Marina
+              </button>
+            </>
+          ) : (
+          <>
           <div className="group">
             {/* PROVISORIO ate a E2-a.
                 O cadastro de colaborador (nome, matricula, telefone) e trabalho
@@ -167,6 +225,16 @@ export default function Login({
           <button type="submit" className="btn-primario" disabled={entrando}>
             {entrando ? 'Entrando…' : 'Entrar'}
           </button>
+
+          <button
+            type="button"
+            onClick={() => { setModo('codigo'); setErro(null) }}
+            className="w-full text-center text-white/35 text-[11px] uppercase tracking-widest font-bold"
+          >
+            Entrar com código do aparelho
+          </button>
+          </>
+          )}
 
           <p className="text-center text-[10px] uppercase tracking-[0.3em] text-white/20 font-black leading-relaxed">
             Você entra uma vez.

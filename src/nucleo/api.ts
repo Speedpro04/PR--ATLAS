@@ -163,6 +163,33 @@ export type RespostaLogin = {
  * O backend espera e-mail. Quem monta o endereco a partir da matricula e a
  * `sessao.ts` — aqui so trafega o que o /auth/login ja aceita.
  */
+/**
+ * Entrada por CÓDIGO DO APARELHO — o caminho novo, e o certo.
+ *
+ * Antes, o colaborador entrava com a conta da Marina. A mesma senha abre o
+ * painel oficial: dá para selar registro, emitir dossiê e ver a frota inteira.
+ * O código não abre nada disso — o servidor recusa. Ele só serve para mandar
+ * pré-dado, que é o trabalho de quem está no píer.
+ *
+ * A Marina gera o código no painel (aba Pré-Data) e entrega ao colaborador.
+ * Perdeu o celular? Ela revoga, e o acesso morre na requisição seguinte.
+ */
+export async function entrarComCodigo(codigo: string): Promise<{ token: string; apelido: string }> {
+  try {
+    return await chamar('/campo/entrar', {
+      method: 'POST',
+      body: JSON.stringify({ codigo }),
+    })
+  } catch (e) {
+    // 401 aqui é código errado ou revogado — não é sessão vencida. A tela
+    // precisa dizer o que fazer, e não mandar entrar de novo com o mesmo.
+    if (e instanceof FalhaApi && e.status === 401) {
+      throw new FalhaApi('credenciais', 'Código inválido ou revogado. Peça outro à Marina.', 401)
+    }
+    throw e
+  }
+}
+
 export async function entrar(email: string, senha: string): Promise<RespostaLogin> {
   try {
     return await chamar('/auth/login', {

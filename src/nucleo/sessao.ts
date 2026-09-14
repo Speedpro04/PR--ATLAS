@@ -14,7 +14,7 @@
  * `created_by` que o backend grava a partir do token, nao o que esta aqui.
  */
 
-import { entrar as apiEntrar, meusDados } from './api'
+import { entrarComCodigo as apiEntrarComCodigo, entrar as apiEntrar, meusDados } from './api'
 import { limparTudo } from './db'
 
 const CHAVE = 'atlas-pre-data:sessao'
@@ -108,6 +108,33 @@ export function venceu(s: Sessao): boolean {
  * ('credenciais') de "estou sem sinal" ('rede'), e sao conversas diferentes
  * com quem esta segurando o celular.
  */
+/**
+ * Entrada pelo CÓDIGO DO APARELHO.
+ *
+ * A sessão fica igual à de sempre — token guardado do mesmo jeito, mesma fila,
+ * mesmo envio. O que muda é o alcance: este token só serve para mandar
+ * pré-dado. Selar registro, emitir dossiê e abrir o painel são recusados pelo
+ * servidor, não escondidos pela tela.
+ *
+ * Não há refresh: o código vale sete dias e a Marina pode revogar a qualquer
+ * momento. Quando vencer, o colaborador digita o código de novo — é um campo
+ * só, e ele já tem o código anotado.
+ */
+export async function entrarComCodigo(codigo: string): Promise<Sessao> {
+  const r = await apiEntrarComCodigo(codigo.trim())
+
+  const s: Sessao = {
+    matricula: r.apelido || 'Aparelho de campo',
+    usuarioId: '',
+    token: r.token,
+    tokenRenovacao: '',
+    entrouEm: new Date().toISOString(),
+    nome: r.apelido,
+  }
+  guardar(s)
+  return s
+}
+
 export async function entrar(identificador: string, senha: string): Promise<Sessao> {
   const r = await apiEntrar(identificadorParaEmail(identificador), senha)
 

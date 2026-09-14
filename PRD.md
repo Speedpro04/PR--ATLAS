@@ -870,6 +870,32 @@ consertado: o retry cria rascunho novo a cada tentativa (3 duplicados hoje), e a
 foto enviada com sucesso nunca é marcada — `f.enviada` é lido em `envio.ts` e
 **não é escrito em lugar nenhum do código**, então toda tentativa reenvia tudo.
 
+## 12.2 Entrada por código do aparelho — 14/09/2026
+
+Até aqui o colaborador entrava com a conta da Marina, e a mesma senha abre o
+painel oficial: selar registro, emitir dossiê, liberar documento a terceiro, ver
+a frota inteira. O fundador apontou o risco em 14/09 e ele foi fechado no mesmo
+dia, do lado do Atlas — aqui entra a outra metade.
+
+**A tela de entrada passa a pedir o CÓDIGO DO APARELHO**, um campo só. A Marina
+gera no painel (aba Pré-Data) e entrega ao colaborador. A entrada por conta
+continua existindo, atrás de um link, porque o gerente também usa este app e
+precisa do próprio acesso.
+
+O token que volta do `/campo/entrar` é guardado como qualquer sessão — mesma
+fila, mesmo envio, mesmo tudo. O que muda é o alcance, e ele é imposto **no
+servidor**: as únicas rotas que aceitam esse token são criar rascunho, subir foto
+e listar a frota. Não é a tela que esconde o resto; é o servidor que recusa.
+
+**Não há refresh**, e é decisão, não esquecimento: o código vale sete dias e pode
+ser revogado a qualquer momento pela Marina. Quando vencer, o colaborador digita
+de novo — é um campo só, e ele tem o código anotado. Pendura um mecanismo de
+renovação aqui e a revogação deixa de ser imediata.
+
+**O que continua em aberto:** isto é identidade de aparelho. Dois funcionários no
+mesmo celular produzem registros indistinguíveis, e o nome que aparece no
+pré-dado segue sendo o que a pessoa digita. Identidade por pessoa é a E2-a.
+
 ## 13. Histórico
 
 - **10/09/2026** — v3. O usuário deixa de ser "o funcionário" genérico e vira o
