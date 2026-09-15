@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { FalhaApi } from '../nucleo/api'
 import { sincronizarFrota } from '../nucleo/frota'
-import { entrarComCodigo, MARINA, type Sessao } from '../nucleo/sessao'
+import { entrarComCodigo, type Sessao } from '../nucleo/sessao'
 
 /**
  * Tela 1 — Login.
@@ -91,8 +91,12 @@ export default function Login({
           <h1 className="text-3xl md:text-4xl font-serif font-bold text-white">
             Atlas Pré-Data
           </h1>
-          <p className="mt-3 md:mt-4 text-[10px] uppercase tracking-[0.4em] text-[#c5a059] font-black">
-            {MARINA}
+          {/* Aqui NAO vai nome de Marina. Antes do codigo o app nao sabe de
+              qual delas ele e — e o que estava escrito era o nome de UMA,
+              dentro de um app que serve todas. O colaborador descobre a sua
+              assim que entra. */}
+          <p className="mt-3 md:mt-4 text-[10px] uppercase tracking-[0.4em] text-white/25 font-black">
+            Registro de serviço no píer
           </p>
         </header>
       </div>

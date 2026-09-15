@@ -217,9 +217,15 @@ banco, com regras de autorização diferentes das que já existem.
 
 Três telas, nessa ordem. Decidido em 10/09/2026.
 
-**Tela 1 — Login.** Logo do Atlas, o nome da Marina, matrícula e senha. Só
-isso — nenhuma tela antes dela. Acontece uma vez; depois a sessão dura 7 dias
-(3.1) e ele não vê mais esta tela.
+**Tela 1 — Login.** Logo do Atlas e o **código do aparelho**. Só isso — nenhuma
+tela antes dela. Acontece uma vez; depois a sessão dura 7 dias (3.1) e ele não
+vê mais esta tela.
+
+**O nome da Marina NÃO aparece aqui**, e isso é decisão, não esquecimento
+(14/09/2026): antes de o código ser digitado, o app não sabe de qual Marina ele
+é. O que havia ali era o nome de UMA Marina escrito no código-fonte, dentro de
+um app que serve todas — o colaborador de uma lia o nome de outra. O nome vem
+no `/campo/entrar`, junto com o token, e aparece a partir da Tela 2.
 
 **Tela 2 — Escolher o barco.** É o único momento em que ele precisa *procurar*
 alguma coisa, e por isso tem uma tela inteira só para ela: lista grande, busca
@@ -603,8 +609,9 @@ avião** mostrando o shell, e lado a lado com o painel do Atlas é o mesmo produ
 **A E2 não cabe só neste repo.** Levantado no código do Atlas em 10/09/2026,
 depois que a 3.4 fechou por login de verdade. Ver "E2-a", logo abaixo.
 
-- **Tela de login** (3.4): logo, nome da Marina, matrícula e senha. Nada antes
-  dela. O vínculo do aparelho com a Marina vem do cadastro, não de uma tela.
+- **Tela de login** (3.4): logo e código do aparelho. Nada antes dela, e sem
+  nome de Marina — ele só é conhecido depois que o código é trocado pelo token.
+  O vínculo do aparelho com a Marina vem do código, não de uma tela.
 - Entra uma vez com rede e o app fica aberto. O `created_by` é dele.
 - **Tela de escolha do barco** separada da ficha — lista grande, busca por nome,
   offline.

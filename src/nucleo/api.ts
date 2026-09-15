@@ -150,13 +150,6 @@ async function extrairDetalhe(r: Response): Promise<string> {
   }
 }
 
-export type RespostaLogin = {
-  access_token: string
-  refresh_token: string
-  /** O backend chama de `user`, mas manda o id. */
-  user: string
-}
-
 /**
  * Entra no Atlas.
  *
@@ -174,34 +167,20 @@ export type RespostaLogin = {
  * A Marina gera o código no painel (aba Pré-Data) e entrega ao colaborador.
  * Perdeu o celular? Ela revoga, e o acesso morre na requisição seguinte.
  */
-export async function entrarComCodigo(codigo: string): Promise<{ token: string; apelido: string }> {
+export async function entrarComCodigo(
+  codigo: string,
+): Promise<{ token: string; apelido: string; marina?: string | null }> {
   try {
     return await chamar('/campo/entrar', {
       method: 'POST',
       body: JSON.stringify({ codigo }),
+      prazo: PRAZO_LOGIN,
     })
   } catch (e) {
     // 401 aqui é código errado ou revogado — não é sessão vencida. A tela
     // precisa dizer o que fazer, e não mandar entrar de novo com o mesmo.
     if (e instanceof FalhaApi && e.status === 401) {
       throw new FalhaApi('credenciais', 'Código inválido ou revogado. Peça outro à Marina.', 401)
-    }
-    throw e
-  }
-}
-
-export async function entrar(email: string, senha: string): Promise<RespostaLogin> {
-  try {
-    return await chamar('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password: senha }),
-      prazo: PRAZO_LOGIN,
-    })
-  } catch (e) {
-    // No login, 401 nao e "sessao vencida" — e senha errada. A tela precisa
-    // dizer "matricula ou senha incorreta", nao "entre de novo".
-    if (e instanceof FalhaApi && e.status === 401) {
-      throw new FalhaApi('credenciais', 'Matrícula ou senha incorreta.', 401)
     }
     throw e
   }

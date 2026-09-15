@@ -14,37 +14,13 @@
  * `created_by` que o backend grava a partir do token, nao o que esta aqui.
  */
 
-import { entrarComCodigo as apiEntrarComCodigo, entrar as apiEntrar, meusDados } from './api'
+import { entrarComCodigo as apiEntrarComCodigo } from './api'
 import { limparTudo } from './db'
 
 const CHAVE = 'atlas-pre-data:sessao'
 /** Chaves antigas: o app trocou de nome duas vezes. Ver db.ts. */
 const CHAVES_ANTIGAS = ['atlas-service:sessao', 'atlas-campo:sessao']
 const SETE_DIAS = 7 * 24 * 60 * 60 * 1000
-
-/**
- * Uma Marina por enquanto.
- *
- * O vinculo aparelho-Marina e a E2-a, no repo do Atlas: hoje `profiles` nao tem
- * `marina_id` e `GET /ativos` filtra por dono do barco, entao um colaborador
- * com conta propria receberia lista vazia. Ate la o nome fica aqui, so para a
- * tela ter o que mostrar.
- */
-export const MARINA = 'Marina Axos Hub'
-
-/**
- * Dominio do e-mail sintetico montado a partir da matricula.
- *
- * O colaborador nunca ve este endereco: na tela dele sao matricula e senha. O
- * Supabase exige um e-mail, entao o app monta um — 4471 vira
- * 4471@campo.yachtsatlas.online.
- *
- * ENQUANTO A E2-a NAO EXISTE, o campo tambem aceita e-mail digitado direto
- * (qualquer coisa com "@"). E como se testa o caminho inteiro hoje, entrando
- * com a conta da propria Marina. Quando o cadastro de colaborador existir, a
- * matricula passa a funcionar e este atalho pode cair.
- */
-const DOMINIO_MATRICULA = 'campo.yachtsatlas.online'
 
 export type Sessao = {
   /** O que ele digitou: a matricula (ou o e-mail, no atalho de hoje). */
@@ -59,16 +35,21 @@ export type Sessao = {
    * legivel.
    */
   nome?: string
+  /**
+   * De qual Marina e este aparelho.
+   *
+   * Vem do proprio codigo, no /campo/entrar — nunca escrito dentro do app. O
+   * Atlas Pre-Data e UM SO para todas as Marinas: nome fixo aqui fazia o
+   * colaborador de uma ler o nome de outra na tela de entrada.
+   *
+   * Pode faltar (a leitura no backend e best-effort, para nao barrar a
+   * entrada), e ai a tela mostra um rotulo neutro em vez de inventar um nome.
+   */
+  marina?: string
   token: string
   tokenRenovacao: string
   /** ISO. A sessao dura 7 dias (PRD 3.1). */
   entrouEm: string
-}
-
-export function identificadorParaEmail(entrada: string): string {
-  const limpo = entrada.trim()
-  if (limpo.includes('@')) return limpo.toLowerCase()
-  return `${limpo.toLowerCase()}@${DOMINIO_MATRICULA}`
 }
 
 export function sessaoAtual(): Sessao | null {
@@ -130,33 +111,8 @@ export async function entrarComCodigo(codigo: string): Promise<Sessao> {
     tokenRenovacao: '',
     entrouEm: new Date().toISOString(),
     nome: r.apelido,
+    marina: r.marina || undefined,
   }
-  guardar(s)
-  return s
-}
-
-export async function entrar(identificador: string, senha: string): Promise<Sessao> {
-  const r = await apiEntrar(identificadorParaEmail(identificador), senha)
-
-  const s: Sessao = {
-    matricula: identificador.trim(),
-    usuarioId: r.user,
-    token: r.access_token,
-    tokenRenovacao: r.refresh_token,
-    entrouEm: new Date().toISOString(),
-  }
-
-  // O nome e um extra: se o /auth/me falhar, a sessao vale do mesmo jeito.
-  // Barrar a entrada porque o nome nao veio seria trocar um detalhe de
-  // apresentacao pelo acesso inteiro.
-  try {
-    const eu = await meusDados(r.access_token)
-    const m = eu?.user_metadata ?? eu?.userMetadata ?? {}
-    s.nome = m.nome || m.full_name || m.name || eu?.nome || undefined
-  } catch {
-    /* segue sem nome */
-  }
-
   guardar(s)
   return s
 }

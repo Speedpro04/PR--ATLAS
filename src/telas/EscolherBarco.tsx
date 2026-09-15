@@ -10,7 +10,7 @@ import {
   tamanhoEmPes,
   type Barco,
 } from '../nucleo/frota'
-import { encerrarSessao, identificadorCurto, MARINA, type Sessao } from '../nucleo/sessao'
+import { encerrarSessao, identificadorCurto, type Sessao } from '../nucleo/sessao'
 import { pendentesDeEnvio } from '../nucleo/rascunho'
 
 /**
@@ -97,7 +97,7 @@ export default function EscolherBarco({
                 tracking 0.4em nao cabe ao lado do nome da Marina em 375px, e
                 quebrar no meio do numero deixa o 4471 orfao. */}
             <p className="text-white/40 text-[10px] uppercase tracking-[0.4em] font-black ml-12 leading-relaxed">
-              {MARINA}
+              {sessao.marina || 'Atlas Pré-Data'}
               <span className="hidden md:inline"> · </span>
               {/* O tracking de 0.4em cabe numa matricula de quatro digitos, e
                   estoura com um e-mail: "kd3online@gmail.com" virou tres linhas

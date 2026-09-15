@@ -6,7 +6,7 @@ import {
   AlertTriangle, Upload, Wrench, Zap, Image as ImageIcon,
 } from 'lucide-react'
 import { acharBarco, descreverBarco, rotularBarco, tamanhoEmPes, type Barco } from '../nucleo/frota'
-import { identificadorCurto, MARINA, type Sessao } from '../nucleo/sessao'
+import { identificadorCurto, type Sessao } from '../nucleo/sessao'
 import {
   CATEGORIAS, CONDICOES, acharCategoria, apagarFoto, descartarRascunho, faltaNoRascunho,
   fotosDoRascunho, guardarFoto, lerRascunho, novoRascunho, rascunhosDoAtivo, salvarRascunho,
@@ -500,7 +500,8 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
 
             {/* O que o app ja sabe, pequeno: e conferencia, nao trabalho. */}
             <p className="text-[9px] text-white/30 uppercase tracking-widest leading-relaxed border-t border-white/5 pt-5">
-              {sessao.nome || identificadorCurto(sessao.matricula)} · {MARINA}
+              {sessao.nome || identificadorCurto(sessao.matricula)}
+              {sessao.marina ? ` · ${sessao.marina}` : ''}
               <br />
               {abertura.toLocaleDateString('pt-BR')} às{' '}
               {abertura.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
