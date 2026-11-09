@@ -166,11 +166,11 @@ export default function Fichario({ sessao }: { sessao: Sessao }) {
     if (!rascunho) return
     await salvarRascunho(rascunho)
     setSalvo(true)
-    const r = await enviarRascunho(rascunho, sessao.token, setEnvio)
-    if (r.estado === 'enviado') {
-      const atualizado = await lerRascunho(rascunho.id)
-      if (atualizado) setRascunho(atualizado)
-    }
+    await enviarRascunho(rascunho, sessao.token, setEnvio)
+    // Recarrega SEMPRE, nao so no sucesso: uma tentativa que caiu no meio ja
+    // pode ter criado o rascunho no Atlas, e a tela passa a carregar o id de la.
+    const atualizado = await lerRascunho(rascunho.id)
+    if (atualizado) setRascunho(atualizado)
   }
 
   if (barco === undefined) return <div className="min-h-[100dvh]" aria-busy="true" />

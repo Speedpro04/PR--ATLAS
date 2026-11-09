@@ -56,6 +56,19 @@ um oitavo nome, acrescente o antigo nas duas listas ANTES de commitar.
 
 ---
 
+## O que mudou em 09/11/2026
+
+**A segunda tentativa de envio deixou de duplicar** (PRD 12.4). Duas causas: a
+foto entregue nunca era marcada, e a tela gravava um rascunho de antes do envio
+por cima do guardado, apagando o id do Atlas. A mensagem de sem sinal parou de
+prometer "sobe sozinho" — a fila automática segue por fazer.
+
+**A lição:** estado do React é cópia, e cópia envelhece. Campo que só o envio
+escreve (`remotoId`, `enviadoEm`) não pode depender de a tela estar em dia — por
+isso `salvarRascunho` o preserva, em vez de confiar em quem chama.
+
+---
+
 ## Estado em 11/09/2026
 
 **E1, E2-b, E3 e E4 feitas — e a E4 foi provada em uso**, com o Marcos

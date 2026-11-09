@@ -877,6 +877,9 @@ consertado: o retry cria rascunho novo a cada tentativa (3 duplicados hoje), e a
 foto enviada com sucesso nunca é marcada — `f.enviada` é lido em `envio.ts` e
 **não é escrito em lugar nenhum do código**, então toda tentativa reenvia tudo.
 
+**Os dois efeitos foram consertados em 09/11/2026 — ver 12.4.** A queda da foto
+em si continua sem causa.
+
 ## 12.2 Entrada por código do aparelho — 14/09/2026
 
 Até aqui o colaborador entrava com a conta da Marina, e a mesma senha abre o
@@ -922,6 +925,50 @@ que quem está no píer não deveria carregar.
 **Ficou o aviso de sessão vencida**, que antes não aparecia: sem ele, quem é
 derrubado pelo prazo de sete dias acha que errou o código e digita o mesmo cinco
 vezes.
+
+## 12.4 A segunda tentativa duplicava — 09/11/2026
+
+Os dois efeitos colaterais da 12.1 tinham a mesma origem: a tentativa seguinte
+não sabia o que a anterior já tinha entregado.
+
+**A foto.** `f.enviada` era lido no envio e nunca gravado. Agora
+`marcarFotoEnviada` grava a marca logo depois de CADA foto subir — se a terceira
+cai, as duas primeiras não sobem de novo.
+
+**O rascunho.** O envio já reaproveitava o id do Atlas (`remotoId`) desde 11/09,
+e mesmo assim duplicava. A tela guardava o rascunho num estado do React de antes
+do envio e, no toque seguinte, gravava esse estado por cima do que estava no
+aparelho — apagando o id que a tentativa anterior tinha acabado de gravar. Sem o
+id, o envio criava outro rascunho no painel. Três travas agora, uma em cada
+camada:
+
+- `salvarRascunho` nunca apaga `remotoId` nem `enviadoEm`: são fatos do envio,
+  não do formulário.
+- `enviarRascunho` lê o id do que está gravado, não do objeto que a tela passou.
+- A tela recarrega o rascunho depois de toda tentativa, não só no sucesso.
+
+**A mensagem.** Sem sinal, a tela dizia *"Fica guardado e sobe sozinho depois"* —
+e não existe envio sozinho: a fila automática da E4 continua por fazer. Quem lê
+isso no píer guarda o celular, e o registro fica parado. Agora diz *"Sem conexão.
+Ficou guardado no aparelho — envie de novo quando o sinal voltar."*
+
+**Como foi provado.** No navegador, com os módulos reais do app e o IndexedDB
+real; só a rede foi simulada, e nada saiu da máquina. Antes do conserto, uma
+queda na 2ª de 3 fotos seguida de nova tentativa deixava o painel com **2
+rascunhos** e a **foto 1 duas vezes**. Depois: 1 rascunho e 3 fotos, nenhuma
+repetida. Passaram também a queda antes do rascunho (a retentativa cria um só),
+o registro já enviado que não reabre com estado velho e o caminho sem queda. O
+mesmo fluxo foi repetido pela tela: código, frota, ficha, fotos e os dois toques.
+
+**O que continua em aberto:**
+
+- **Resposta perdida.** Se o servidor recebe e a resposta não volta (o app
+  desiste em 45 s), o app não sabe que entregou e a retentativa duplica. Só o
+  Atlas fecha isso: o `POST /registros/rascunho` não procura pelo `client_id`, e
+  o upload grava o hash sem conferir se ele já existe. É código do repo do Atlas.
+- **A queda da 12.1** — por que a segunda foto não saía do aparelho — segue sem
+  diagnóstico. Este conserto tira a duplicata, não a queda.
+- A fila automática da E4.
 
 ## 13. Histórico
 

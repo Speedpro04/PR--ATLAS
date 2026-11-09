@@ -86,7 +86,10 @@ export const CONDICOES: Array<{ valor: Condicao; rotulo: string; ajuda: string }
 export type Foto = {
   id: string
   rascunhoId: string
-  /** Ja subiu? Evita reenviar imagem de 4 MB numa segunda tentativa. */
+  /**
+   * Ja subiu? Gravado por `marcarFotoEnviada` logo depois de CADA foto chegar
+   * ao Atlas — e o que impede a segunda tentativa de reenviar a mesma imagem.
+   */
   enviada?: boolean
   /**
    * O arquivo como saiu da camera, SEM comprimir.
@@ -130,11 +133,12 @@ export type Rascunho = {
   abertoEm: string
   atualizadoEm: string
   /**
-   * Id gerado no aparelho, que sobe junto na E4.
+   * Id gerado no aparelho. Sobe no `dados` e no fim da descricao de cada foto:
+   * e o que amarra as fotos ao pre-dado do lado do Atlas.
    *
-   * E ele que impede a fila de duplicar: reenviar o mesmo `clientId` nao cria
-   * linha nova no Atlas. Sinal instavel reenvia sozinho, e sem isto o mesmo
-   * servico entraria tres vezes.
+   * NAO impede duplicata. O `POST /registros/rascunho` do Atlas nao procura por
+   * ele — cada chamada cria uma linha. Quem evita o segundo rascunho e o
+   * `remotoId` guardado aqui (ver `salvarRascunho`).
    */
   clientId: string
   /** Contagem de fotos, para a lista nao precisar carregar Blob nenhum. */
@@ -189,8 +193,24 @@ export function novoRascunho(
   }
 }
 
+/**
+ * Grava o rascunho inteiro, por cima do que estava.
+ *
+ * `remotoId` e `enviadoEm` sao fatos do ENVIO, nao do formulario, e uma vez
+ * gravados nada os apaga. A tela guarda o rascunho num estado do React que pode
+ * ser de antes do envio: gravar por cima sem este cuidado apagava o id do
+ * Atlas, e a tentativa seguinte criava OUTRO rascunho no painel (PRD 12.1).
+ */
 export async function salvarRascunho(r: Rascunho): Promise<boolean> {
-  return gravar(LOJA_RASCUNHOS, { ...r, atualizadoEm: new Date().toISOString() })
+  const guardado = await lerRascunho(r.id)
+  const remotoId = r.remotoId || guardado?.remotoId
+  const enviadoEm = r.enviadoEm || guardado?.enviadoEm
+  return gravar(LOJA_RASCUNHOS, {
+    ...r,
+    ...(remotoId ? { remotoId } : {}),
+    ...(enviadoEm ? { enviadoEm } : {}),
+    atualizadoEm: new Date().toISOString(),
+  })
 }
 
 export async function lerRascunho(id: string): Promise<Rascunho | null> {
@@ -235,6 +255,18 @@ export async function guardarFoto(rascunhoId: string, arquivo: Blob, nome: strin
 export async function fotosDoRascunho(rascunhoId: string): Promise<Foto[]> {
   const fotos = await lerPorIndice<Foto>(LOJA_FOTOS, 'por_rascunho', rascunhoId)
   return fotos.sort((a, b) => a.criadaEm.localeCompare(b.criadaEm))
+}
+
+/**
+ * Marca a foto como entregue ao Atlas — chamada logo depois de CADA foto subir.
+ *
+ * Le a foto de novo antes de gravar: se ela foi apagada durante o envio,
+ * gravar a copia da memoria a ressuscitaria no aparelho.
+ */
+export async function marcarFotoEnviada(foto: Foto): Promise<boolean> {
+  const atual = await ler<Foto>(LOJA_FOTOS, foto.id)
+  if (!atual) return false
+  return gravar(LOJA_FOTOS, { ...atual, enviada: true })
 }
 
 export async function apagarFoto(foto: Foto): Promise<void> {

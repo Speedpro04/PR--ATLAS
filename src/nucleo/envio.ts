@@ -17,7 +17,10 @@
  */
 
 import { FalhaApi, enviarFoto, criarRascunhoRemoto } from './api'
-import { acharCategoria, fotosDoRascunho, salvarRascunho, type Rascunho } from './rascunho'
+import {
+  acharCategoria, fotosDoRascunho, lerRascunho, marcarFotoEnviada, salvarRascunho,
+  type Rascunho,
+} from './rascunho'
 
 export type EstadoEnvio = 'guardado' | 'enviando' | 'enviado' | 'falhou'
 
@@ -74,6 +77,10 @@ export async function enviarRascunho(
   aoAndar?: (p: ResultadoEnvio) => void,
 ): Promise<ResultadoEnvio> {
   const fotos = await fotosDoRascunho(r.id)
+  // O que vale e o que esta GRAVADO, nao o objeto que a tela passou: ela pode
+  // chamar com um rascunho de antes da tentativa anterior, sem o id do Atlas
+  // que aquela tentativa gravou.
+  const guardado = await lerRascunho(r.id)
   const parcial: ResultadoEnvio = {
     estado: 'enviando',
     fotosEnviadas: 0,
@@ -86,7 +93,7 @@ export async function enviarRascunho(
   try {
     // Ja subiu antes? Reaproveita o id em vez de criar outro rascunho no
     // Atlas: uma tentativa que falhou nas FOTOS nao deve duplicar o texto.
-    let remotoId = r.remotoId
+    let remotoId = r.remotoId || guardado?.remotoId
     if (!remotoId) {
       const criado = await criarRascunhoRemoto(token, {
         ativo_id: r.ativoId,
@@ -115,6 +122,9 @@ export async function enviarRascunho(
         // documento nao conhece rascunho: a descricao carrega o client_id.
         descricao: `Atlas Pré-Data · ${categoria?.rotulo ?? r.categoria} · ${r.clientId}`,
       })
+      // Marca na hora, foto por foto: se a proxima cair, esta nao sobe de novo
+      // na tentativa seguinte — cada reenvio era outra copia na fila do Pre-Data.
+      await marcarFotoEnviada(f)
       parcial.fotosEnviadas += 1
       aoAndar?.({ ...parcial })
     }
@@ -124,10 +134,12 @@ export async function enviarRascunho(
     aoAndar?.(fim)
     return fim
   } catch (e) {
+    // Nada de "sobe sozinho": a fila automatica ainda nao existe (E4). Quem le
+    // a promessa no pier guarda o celular, e o registro fica parado no aparelho.
     const erro =
       e instanceof FalhaApi
         ? e.tipo === 'rede'
-          ? 'Sem conexão. Fica guardado e sobe sozinho depois.'
+          ? 'Sem conexão. Ficou guardado no aparelho — envie de novo quando o sinal voltar.'
           : e.message
         : 'Não foi possível enviar agora.'
     const fim: ResultadoEnvio = { ...parcial, estado: 'falhou', erro }
